@@ -37,7 +37,8 @@ export type Disponibilidade = {
 type Filtros = {
   dataBase: string;
   horizonte: number;
-  empresaId: string;
+  /** Vazio = todas as empresas (respeitando o filtro de grupo). */
+  empresaIds: string[];
   grupo: string;
   cenarioId: string;
   status: string;
@@ -49,7 +50,14 @@ type Ctx = {
 };
 
 const FiltrosCtx = createContext<Ctx>({
-  filtros: { dataBase: "", horizonte: 13, empresaId: "todas", grupo: "todos", cenarioId: "", status: "todos" },
+  filtros: {
+    dataBase: "",
+    horizonte: 13,
+    empresaIds: [],
+    grupo: "todos",
+    cenarioId: "",
+    status: "todos",
+  },
   setFiltros: () => {},
 });
 
@@ -57,7 +65,7 @@ export function FiltrosProvider({ children }: { children: ReactNode }) {
   const [filtros, setF] = useState<Filtros>({
     dataBase: iso(inicioSemana(new Date())),
     horizonte: 13,
-    empresaId: "todas",
+    empresaIds: [],
     grupo: "todos",
     cenarioId: "",
     status: "todos",
@@ -109,10 +117,7 @@ export const useDisponibilidades = () =>
   useQuery({
     queryKey: ["disponibilidades"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("disponibilidades")
-        .select("*")
-        .order("banco");
+      const { data, error } = await supabase.from("disponibilidades").select("*").order("banco");
       if (error) throw error;
       return (data ?? []) as unknown as Disponibilidade[];
     },
@@ -132,11 +137,14 @@ export function useFluxo() {
     null;
 
   const empresasFiltradas = useMemo(() => {
-    const lista = empresas.data ?? [];
-    if (filtros.empresaId !== "todas") return lista.filter((e) => e.id === filtros.empresaId);
-    if (filtros.grupo !== "todos") return lista.filter((e) => e.grupo === filtros.grupo);
+    let lista = empresas.data ?? [];
+    if (filtros.empresaIds.length > 0) {
+      const ids = new Set(filtros.empresaIds);
+      lista = lista.filter((e) => ids.has(e.id));
+    }
+    if (filtros.grupo !== "todos") lista = lista.filter((e) => e.grupo === filtros.grupo);
     return lista;
-  }, [empresas.data, filtros.empresaId, filtros.grupo]);
+  }, [empresas.data, filtros.empresaIds, filtros.grupo]);
 
   const idsPermitidos = useMemo(
     () => new Set(empresasFiltradas.map((e) => e.id)),
