@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Download, FileText, Printer } from "lucide-react";
 import { FiltrosBar } from "@/components/FiltrosBar";
 import { DetalheMovimentacoes } from "@/components/DetalheMovimentacoes";
@@ -174,8 +174,8 @@ function FluxoSemanal() {
                 total={fluxo.saldoInicial}
               />
               {(["entradas", "pagamentos", "amortizacoes"] as const).map((g) => (
-                <>
-                  <tr key={g} className="bg-secondary">
+                <Fragment key={g}>
+                  <tr className="bg-secondary">
                     <td
                       colSpan={fluxo.semanas.length + 2}
                       className="p-2 text-xs font-semibold uppercase tracking-wide text-secondary-foreground"
@@ -224,7 +224,7 @@ function FluxoSemanal() {
                     }
                     destaque={g === "entradas" ? "positivo" : "negativo"}
                   />
-                </>
+                </Fragment>
               ))}
               <Totais
                 rotulo="Disponibilidade antes dos pagamentos"
