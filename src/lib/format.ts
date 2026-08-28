@@ -49,9 +49,9 @@ export const addDias = (d: Date, dias: number) => {
   return r;
 };
 
-/** Segunda-feira da semana da data informada. */
+/** Sexta-feira que inicia a semana da data informada (sexta a quinta). */
 export const inicioSemana = (d: string | Date) => {
   const dt = toDate(d);
-  const dia = (dt.getDay() + 6) % 7;
+  const dia = (dt.getDay() + 2) % 7;
   return addDias(dt, -dia);
 };
