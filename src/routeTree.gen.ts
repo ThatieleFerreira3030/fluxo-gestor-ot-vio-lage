@@ -15,6 +15,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCenariosRouteImport } from './routes/_authenticated/cenarios'
 import { Route as AuthenticatedConciliacaoRouteImport } from './routes/_authenticated/conciliacao'
 import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_authenticated/disponibilidades'
+import { Route as AuthenticatedDividasRouteImport } from './routes/_authenticated/dividas'
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
 import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenticated/importacoes'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
@@ -53,6 +54,11 @@ const AuthenticatedDisponibilidadesRoute =
     path: '/disponibilidades',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDividasRoute = AuthenticatedDividasRouteImport.update({
+  id: '/dividas',
+  path: '/dividas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFluxoSemanalRoute =
   AuthenticatedFluxoSemanalRouteImport.update({
     id: '/fluxo-semanal',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/cenarios': typeof AuthenticatedCenariosRoute
   '/conciliacao': typeof AuthenticatedConciliacaoRoute
   '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
+  '/dividas': typeof AuthenticatedDividasRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/cenarios': typeof AuthenticatedCenariosRoute
   '/conciliacao': typeof AuthenticatedConciliacaoRoute
   '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
+  '/dividas': typeof AuthenticatedDividasRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/cenarios': typeof AuthenticatedCenariosRoute
   '/_authenticated/conciliacao': typeof AuthenticatedConciliacaoRoute
   '/_authenticated/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
+  '/_authenticated/dividas': typeof AuthenticatedDividasRoute
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/_authenticated/importacoes': typeof AuthenticatedImportacoesRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/cenarios'
     | '/conciliacao'
     | '/disponibilidades'
+    | '/dividas'
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/cenarios'
     | '/conciliacao'
     | '/disponibilidades'
+    | '/dividas'
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cenarios'
     | '/_authenticated/conciliacao'
     | '/_authenticated/disponibilidades'
+    | '/_authenticated/dividas'
     | '/_authenticated/fluxo-semanal'
     | '/_authenticated/importacoes'
     | '/_authenticated/movimentacoes'
@@ -220,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDisponibilidadesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dividas': {
+      id: '/_authenticated/dividas'
+      path: '/dividas'
+      fullPath: '/dividas'
+      preLoaderRoute: typeof AuthenticatedDividasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fluxo-semanal': {
       id: '/_authenticated/fluxo-semanal'
       path: '/fluxo-semanal'
@@ -269,6 +288,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCenariosRoute: typeof AuthenticatedCenariosRoute
   AuthenticatedConciliacaoRoute: typeof AuthenticatedConciliacaoRoute
   AuthenticatedDisponibilidadesRoute: typeof AuthenticatedDisponibilidadesRoute
+  AuthenticatedDividasRoute: typeof AuthenticatedDividasRoute
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
   AuthenticatedImportacoesRoute: typeof AuthenticatedImportacoesRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
@@ -282,6 +302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCenariosRoute: AuthenticatedCenariosRoute,
   AuthenticatedConciliacaoRoute: AuthenticatedConciliacaoRoute,
   AuthenticatedDisponibilidadesRoute: AuthenticatedDisponibilidadesRoute,
+  AuthenticatedDividasRoute: AuthenticatedDividasRoute,
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
   AuthenticatedImportacoesRoute: AuthenticatedImportacoesRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
