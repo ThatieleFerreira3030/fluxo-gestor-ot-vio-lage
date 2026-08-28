@@ -12,8 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
+import { Route as AuthenticatedCenariosRouteImport } from './routes/_authenticated/cenarios'
+import { Route as AuthenticatedConciliacaoRouteImport } from './routes/_authenticated/conciliacao'
+import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_authenticated/disponibilidades'
+import { Route as AuthenticatedDividasRouteImport } from './routes/_authenticated/dividas'
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
+import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenticated/importacoes'
+import { Route as AuthenticatedModoDiretoriaRouteImport } from './routes/_authenticated/modo-diretoria'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
+import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
+import { Route as AuthenticatedReceitasRouteImport } from './routes/_authenticated/receitas'
+import { Route as AuthenticatedVersoesRouteImport } from './routes/_authenticated/versoes'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -29,10 +39,49 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
+  id: '/cadastros',
+  path: '/cadastros',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCenariosRoute = AuthenticatedCenariosRouteImport.update({
+  id: '/cenarios',
+  path: '/cenarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConciliacaoRoute =
+  AuthenticatedConciliacaoRouteImport.update({
+    id: '/conciliacao',
+    path: '/conciliacao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDisponibilidadesRoute =
+  AuthenticatedDisponibilidadesRouteImport.update({
+    id: '/disponibilidades',
+    path: '/disponibilidades',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDividasRoute = AuthenticatedDividasRouteImport.update({
+  id: '/dividas',
+  path: '/dividas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFluxoSemanalRoute =
   AuthenticatedFluxoSemanalRouteImport.update({
     id: '/fluxo-semanal',
     path: '/fluxo-semanal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedImportacoesRoute =
+  AuthenticatedImportacoesRouteImport.update({
+    id: '/importacoes',
+    path: '/importacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedModoDiretoriaRoute =
+  AuthenticatedModoDiretoriaRouteImport.update({
+    id: '/modo-diretoria',
+    path: '/modo-diretoria',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMovimentacoesRoute =
@@ -41,38 +90,121 @@ const AuthenticatedMovimentacoesRoute =
     path: '/movimentacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReceitasRoute = AuthenticatedReceitasRouteImport.update({
+  id: '/receitas',
+  path: '/receitas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVersoesRoute = AuthenticatedVersoesRouteImport.update({
+  id: '/versoes',
+  path: '/versoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/cadastros': typeof AuthenticatedCadastrosRoute
+  '/cenarios': typeof AuthenticatedCenariosRoute
+  '/conciliacao': typeof AuthenticatedConciliacaoRoute
+  '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
+  '/dividas': typeof AuthenticatedDividasRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/importacoes': typeof AuthenticatedImportacoesRoute
+  '/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
+  '/receitas': typeof AuthenticatedReceitasRoute
+  '/versoes': typeof AuthenticatedVersoesRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/cadastros': typeof AuthenticatedCadastrosRoute
+  '/cenarios': typeof AuthenticatedCenariosRoute
+  '/conciliacao': typeof AuthenticatedConciliacaoRoute
+  '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
+  '/dividas': typeof AuthenticatedDividasRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/importacoes': typeof AuthenticatedImportacoesRoute
+  '/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
+  '/receitas': typeof AuthenticatedReceitasRoute
+  '/versoes': typeof AuthenticatedVersoesRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
+  '/_authenticated/cenarios': typeof AuthenticatedCenariosRoute
+  '/_authenticated/conciliacao': typeof AuthenticatedConciliacaoRoute
+  '/_authenticated/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
+  '/_authenticated/dividas': typeof AuthenticatedDividasRoute
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/_authenticated/importacoes': typeof AuthenticatedImportacoesRoute
+  '/_authenticated/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
+  '/_authenticated/receitas': typeof AuthenticatedReceitasRoute
+  '/_authenticated/versoes': typeof AuthenticatedVersoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/fluxo-semanal' | '/movimentacoes'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/cadastros'
+    | '/cenarios'
+    | '/conciliacao'
+    | '/disponibilidades'
+    | '/dividas'
+    | '/fluxo-semanal'
+    | '/importacoes'
+    | '/modo-diretoria'
+    | '/movimentacoes'
+    | '/pagamentos'
+    | '/receitas'
+    | '/versoes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/fluxo-semanal' | '/movimentacoes' | '/'
+  to:
+    | '/auth'
+    | '/cadastros'
+    | '/cenarios'
+    | '/conciliacao'
+    | '/disponibilidades'
+    | '/dividas'
+    | '/fluxo-semanal'
+    | '/importacoes'
+    | '/modo-diretoria'
+    | '/movimentacoes'
+    | '/pagamentos'
+    | '/receitas'
+    | '/versoes'
+    | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/cadastros'
+    | '/_authenticated/cenarios'
+    | '/_authenticated/conciliacao'
+    | '/_authenticated/disponibilidades'
+    | '/_authenticated/dividas'
     | '/_authenticated/fluxo-semanal'
+    | '/_authenticated/importacoes'
+    | '/_authenticated/modo-diretoria'
     | '/_authenticated/movimentacoes'
+    | '/_authenticated/pagamentos'
+    | '/_authenticated/receitas'
+    | '/_authenticated/versoes'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
@@ -104,11 +236,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cadastros': {
+      id: '/_authenticated/cadastros'
+      path: '/cadastros'
+      fullPath: '/cadastros'
+      preLoaderRoute: typeof AuthenticatedCadastrosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cenarios': {
+      id: '/_authenticated/cenarios'
+      path: '/cenarios'
+      fullPath: '/cenarios'
+      preLoaderRoute: typeof AuthenticatedCenariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/conciliacao': {
+      id: '/_authenticated/conciliacao'
+      path: '/conciliacao'
+      fullPath: '/conciliacao'
+      preLoaderRoute: typeof AuthenticatedConciliacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/disponibilidades': {
+      id: '/_authenticated/disponibilidades'
+      path: '/disponibilidades'
+      fullPath: '/disponibilidades'
+      preLoaderRoute: typeof AuthenticatedDisponibilidadesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dividas': {
+      id: '/_authenticated/dividas'
+      path: '/dividas'
+      fullPath: '/dividas'
+      preLoaderRoute: typeof AuthenticatedDividasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fluxo-semanal': {
       id: '/_authenticated/fluxo-semanal'
       path: '/fluxo-semanal'
       fullPath: '/fluxo-semanal'
       preLoaderRoute: typeof AuthenticatedFluxoSemanalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/importacoes': {
+      id: '/_authenticated/importacoes'
+      path: '/importacoes'
+      fullPath: '/importacoes'
+      preLoaderRoute: typeof AuthenticatedImportacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/modo-diretoria': {
+      id: '/_authenticated/modo-diretoria'
+      path: '/modo-diretoria'
+      fullPath: '/modo-diretoria'
+      preLoaderRoute: typeof AuthenticatedModoDiretoriaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/movimentacoes': {
@@ -118,18 +299,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMovimentacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pagamentos': {
+      id: '/_authenticated/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/receitas': {
+      id: '/_authenticated/receitas'
+      path: '/receitas'
+      fullPath: '/receitas'
+      preLoaderRoute: typeof AuthenticatedReceitasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/versoes': {
+      id: '/_authenticated/versoes'
+      path: '/versoes'
+      fullPath: '/versoes'
+      preLoaderRoute: typeof AuthenticatedVersoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
+  AuthenticatedCenariosRoute: typeof AuthenticatedCenariosRoute
+  AuthenticatedConciliacaoRoute: typeof AuthenticatedConciliacaoRoute
+  AuthenticatedDisponibilidadesRoute: typeof AuthenticatedDisponibilidadesRoute
+  AuthenticatedDividasRoute: typeof AuthenticatedDividasRoute
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
+  AuthenticatedImportacoesRoute: typeof AuthenticatedImportacoesRoute
+  AuthenticatedModoDiretoriaRoute: typeof AuthenticatedModoDiretoriaRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
+  AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
+  AuthenticatedReceitasRoute: typeof AuthenticatedReceitasRoute
+  AuthenticatedVersoesRoute: typeof AuthenticatedVersoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
+  AuthenticatedCenariosRoute: AuthenticatedCenariosRoute,
+  AuthenticatedConciliacaoRoute: AuthenticatedConciliacaoRoute,
+  AuthenticatedDisponibilidadesRoute: AuthenticatedDisponibilidadesRoute,
+  AuthenticatedDividasRoute: AuthenticatedDividasRoute,
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
+  AuthenticatedImportacoesRoute: AuthenticatedImportacoesRoute,
+  AuthenticatedModoDiretoriaRoute: AuthenticatedModoDiretoriaRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
+  AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
+  AuthenticatedReceitasRoute: AuthenticatedReceitasRoute,
+  AuthenticatedVersoesRoute: AuthenticatedVersoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
