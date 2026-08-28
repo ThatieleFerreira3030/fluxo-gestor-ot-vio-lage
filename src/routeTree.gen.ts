@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_authenticated/disponibilidades'
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
 
@@ -29,6 +30,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDisponibilidadesRoute =
+  AuthenticatedDisponibilidadesRouteImport.update({
+    id: '/disponibilidades',
+    path: '/disponibilidades',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFluxoSemanalRoute =
   AuthenticatedFluxoSemanalRouteImport.update({
     id: '/fluxo-semanal',
@@ -45,11 +52,13 @@ const AuthenticatedMovimentacoesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/': typeof AuthenticatedIndexRoute
@@ -58,19 +67,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/fluxo-semanal' | '/movimentacoes'
+  fullPaths:
+    '/' | '/auth' | '/disponibilidades' | '/fluxo-semanal' | '/movimentacoes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/fluxo-semanal' | '/movimentacoes' | '/'
+  to: '/auth' | '/disponibilidades' | '/fluxo-semanal' | '/movimentacoes' | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/disponibilidades'
     | '/_authenticated/fluxo-semanal'
     | '/_authenticated/movimentacoes'
     | '/_authenticated/'
@@ -104,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/disponibilidades': {
+      id: '/_authenticated/disponibilidades'
+      path: '/disponibilidades'
+      fullPath: '/disponibilidades'
+      preLoaderRoute: typeof AuthenticatedDisponibilidadesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fluxo-semanal': {
       id: '/_authenticated/fluxo-semanal'
       path: '/fluxo-semanal'
@@ -122,12 +141,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDisponibilidadesRoute: typeof AuthenticatedDisponibilidadesRoute
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDisponibilidadesRoute: AuthenticatedDisponibilidadesRoute,
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
