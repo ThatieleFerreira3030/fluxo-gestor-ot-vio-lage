@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_authenticated/disponibilidades'
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
+import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenticated/importacoes'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -42,6 +43,12 @@ const AuthenticatedFluxoSemanalRoute =
     path: '/fluxo-semanal',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedImportacoesRoute =
+  AuthenticatedImportacoesRouteImport.update({
+    id: '/importacoes',
+    path: '/importacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMovimentacoesRoute =
   AuthenticatedMovimentacoesRouteImport.update({
     id: '/movimentacoes',
@@ -54,12 +61,14 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/': typeof AuthenticatedIndexRoute
 }
@@ -69,21 +78,34 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/_authenticated/importacoes': typeof AuthenticatedImportacoesRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/disponibilidades' | '/fluxo-semanal' | '/movimentacoes'
+    | '/'
+    | '/auth'
+    | '/disponibilidades'
+    | '/fluxo-semanal'
+    | '/importacoes'
+    | '/movimentacoes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/disponibilidades' | '/fluxo-semanal' | '/movimentacoes' | '/'
+  to:
+    | '/auth'
+    | '/disponibilidades'
+    | '/fluxo-semanal'
+    | '/importacoes'
+    | '/movimentacoes'
+    | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/disponibilidades'
     | '/_authenticated/fluxo-semanal'
+    | '/_authenticated/importacoes'
     | '/_authenticated/movimentacoes'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -130,6 +152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFluxoSemanalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/importacoes': {
+      id: '/_authenticated/importacoes'
+      path: '/importacoes'
+      fullPath: '/importacoes'
+      preLoaderRoute: typeof AuthenticatedImportacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/movimentacoes': {
       id: '/_authenticated/movimentacoes'
       path: '/movimentacoes'
@@ -143,6 +172,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDisponibilidadesRoute: typeof AuthenticatedDisponibilidadesRoute
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
+  AuthenticatedImportacoesRoute: typeof AuthenticatedImportacoesRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
@@ -150,6 +180,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDisponibilidadesRoute: AuthenticatedDisponibilidadesRoute,
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
+  AuthenticatedImportacoesRoute: AuthenticatedImportacoesRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }

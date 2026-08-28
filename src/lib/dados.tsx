@@ -7,6 +7,7 @@ import { inicioSemana, iso } from "./format";
 export type Empresa = {
   id: string;
   nome: string;
+  apelido: string | null;
   grupo: string | null;
   cnpj: string | null;
   ativa: boolean;
