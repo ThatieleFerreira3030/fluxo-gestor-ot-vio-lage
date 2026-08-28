@@ -68,7 +68,7 @@ const vazio = {
 
 function Movimentacoes() {
   const { movimentacoes, empresas, carregando } = useFluxo();
-  const { podeEditar, perfil } = useAuth();
+  const { podeEditar, user } = useAuth();
   const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [natureza, setNatureza] = useState("todas");
@@ -111,7 +111,7 @@ function Movimentacoes() {
           valor_anterior: String(editando.valor_liquido),
           valor_novo: String(form["valor_liquido"]),
           motivo: motivo || "Edição manual",
-          usuario: perfil?.email ?? "sistema",
+          usuario: user?.email ?? "sistema",
         });
       } else {
         const { error } = await supabase.from("movimentacoes").insert(payload);
