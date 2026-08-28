@@ -17,7 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useFluxo } from "@/lib/dados";
@@ -41,6 +47,14 @@ export const Route = createFileRoute("/_authenticated/disponibilidades")({
   component: Disponibilidades,
 });
 
+const TIPO_LABEL: Record<string, string> = {
+  conta_corrente: "Conta corrente",
+  aplicacao: "Aplicação",
+  quotas: "Quotas de capital",
+  caixa: "Caixa",
+  poupanca: "Poupança",
+};
+
 function Disponibilidades() {
   const { disponibilidades, empresas, carregando } = useFluxo();
   const { podeEditar } = useAuth();
@@ -61,8 +75,12 @@ function Disponibilidades() {
   });
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
-  const contas = disponibilidades.filter((d) => d.tipo === "conta_corrente");
-  const aplicacoes = disponibilidades.filter((d) => d.tipo !== "conta_corrente");
+  const quotas = disponibilidades.filter((d) => d.tipo === "quotas");
+  const semQuotas = disponibilidades.filter((d) => d.tipo !== "quotas");
+  const contas = disponibilidades.filter((d) =>
+    ["conta_corrente", "caixa", "poupanca"].includes(d.tipo),
+  );
+  const aplicacoes = disponibilidades.filter((d) => d.tipo === "aplicacao");
   const soma = (l: typeof disponibilidades) => l.reduce((a, d) => a + Number(d.saldo), 0);
 
   const porBanco = Object.entries(
@@ -91,7 +109,8 @@ function Disponibilidades() {
     onError: (e: Error) => toast.error("Erro: " + e.message),
   });
 
-  if (carregando) return <p className="text-sm text-muted-foreground">Carregando disponibilidades…</p>;
+  if (carregando)
+    return <p className="text-sm text-muted-foreground">Carregando disponibilidades…</p>;
 
   return (
     <div>
@@ -112,7 +131,7 @@ function Disponibilidades() {
                   Banco: d.banco,
                   Agência: d.agencia,
                   Conta: d.conta,
-                  Tipo: d.tipo,
+                  Tipo: TIPO_LABEL[d.tipo] ?? d.tipo,
                   Produto: d.produto,
                   Saldo: Number(d.saldo),
                   "% CDI": d.percentual_cdi,
@@ -134,13 +153,38 @@ function Disponibilidades() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Kpi titulo="Total disponível" valor={brl(soma(disponibilidades), true)} />
-        <Kpi titulo="Contas correntes" valor={brl(soma(contas), true)} detalhe={`${contas.length} contas`} />
-        <Kpi titulo="Aplicações" valor={brl(soma(aplicacoes), true)} detalhe={`${aplicacoes.length} produtos`} />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        <Kpi
+          titulo="Saldo sem quotas"
+          valor={brl(soma(semQuotas), true)}
+          detalhe="Contas, caixa e aplicações"
+        />
+        <Kpi
+          titulo="Saldo com quotas"
+          valor={brl(soma(disponibilidades), true)}
+          detalhe="Inclui quotas de capital"
+        />
+        <Kpi
+          titulo="Contas correntes"
+          valor={brl(soma(contas), true)}
+          detalhe={`${contas.length} contas`}
+        />
+        <Kpi
+          titulo="Aplicações"
+          valor={brl(soma(aplicacoes), true)}
+          detalhe={`${aplicacoes.length} produtos`}
+        />
+        <Kpi
+          titulo="Quotas de capital"
+          valor={brl(soma(quotas), true)}
+          detalhe={`${quotas.length} cooperativas`}
+        />
         <Kpi
           titulo="Valores bloqueados"
-          valor={brl(disponibilidades.reduce((a, d) => a + Number(d.valor_bloqueado), 0), true)}
+          valor={brl(
+            disponibilidades.reduce((a, d) => a + Number(d.valor_bloqueado), 0),
+            true,
+          )}
           tom="alerta"
         />
       </div>
@@ -190,9 +234,7 @@ function Disponibilidades() {
                       {d.produto ?? [d.agencia, d.conta].filter(Boolean).join(" / ") ?? "—"}
                     </td>
                     <td className="p-2">
-                      <Badge variant="outline">
-                        {d.tipo === "conta_corrente" ? "Conta corrente" : "Aplicação"}
-                      </Badge>
+                      <Badge variant="outline">{TIPO_LABEL[d.tipo] ?? d.tipo}</Badge>
                     </td>
                     <td className="num p-2 text-right">{brl(Number(d.saldo))}</td>
                     <td className="num p-2 text-right">
@@ -236,17 +278,26 @@ function Disponibilidades() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Banco</Label>
-              <Input value={String(form["banco"])} onChange={(e) => setForm({ ...form, banco: e.target.value })} />
+              <Input
+                value={String(form["banco"])}
+                onChange={(e) => setForm({ ...form, banco: e.target.value })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Tipo</Label>
-              <Select value={String(form["tipo"])} onValueChange={(v) => setForm({ ...form, tipo: v })}>
+              <Select
+                value={String(form["tipo"])}
+                onValueChange={(v) => setForm({ ...form, tipo: v })}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="conta_corrente">Conta corrente</SelectItem>
+                  <SelectItem value="caixa">Caixa</SelectItem>
+                  <SelectItem value="poupanca">Poupança</SelectItem>
                   <SelectItem value="aplicacao">Aplicação</SelectItem>
+                  <SelectItem value="quotas">Quotas de capital</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -274,7 +325,10 @@ function Disponibilidades() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Liquidez</Label>
-              <Select value={String(form["liquidez"])} onValueChange={(v) => setForm({ ...form, liquidez: v })}>
+              <Select
+                value={String(form["liquidez"])}
+                onValueChange={(v) => setForm({ ...form, liquidez: v })}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
