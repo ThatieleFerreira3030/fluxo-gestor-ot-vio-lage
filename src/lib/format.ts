@@ -26,7 +26,7 @@ export const pct = (v: number) => `${(v * 100).toLocaleString("pt-BR", { maximum
 export const toDate = (d: string | Date): Date => {
   if (d instanceof Date) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const [y, m, dd] = d.slice(0, 10).split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, dd ?? 1);
+  return new Date(y ?? 1970, (m ?? 1) - 1, dd ?? 1);
 };
 
 export const iso = (d: Date) =>
