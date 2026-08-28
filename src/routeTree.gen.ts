@@ -19,6 +19,7 @@ import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_aut
 import { Route as AuthenticatedDividasRouteImport } from './routes/_authenticated/dividas'
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
 import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenticated/importacoes'
+import { Route as AuthenticatedModoDiretoriaRouteImport } from './routes/_authenticated/modo-diretoria'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
 import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
 import { Route as AuthenticatedReceitasRouteImport } from './routes/_authenticated/receitas'
@@ -77,6 +78,12 @@ const AuthenticatedImportacoesRoute =
     path: '/importacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedModoDiretoriaRoute =
+  AuthenticatedModoDiretoriaRouteImport.update({
+    id: '/modo-diretoria',
+    path: '/modo-diretoria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMovimentacoesRoute =
   AuthenticatedMovimentacoesRouteImport.update({
     id: '/movimentacoes',
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/dividas': typeof AuthenticatedDividasRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
+  '/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/receitas': typeof AuthenticatedReceitasRoute
@@ -123,6 +131,7 @@ export interface FileRoutesByTo {
   '/dividas': typeof AuthenticatedDividasRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
+  '/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/receitas': typeof AuthenticatedReceitasRoute
@@ -140,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/dividas': typeof AuthenticatedDividasRoute
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/_authenticated/importacoes': typeof AuthenticatedImportacoesRoute
+  '/_authenticated/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
   '/_authenticated/receitas': typeof AuthenticatedReceitasRoute
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/dividas'
     | '/fluxo-semanal'
     | '/importacoes'
+    | '/modo-diretoria'
     | '/movimentacoes'
     | '/pagamentos'
     | '/receitas'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/dividas'
     | '/fluxo-semanal'
     | '/importacoes'
+    | '/modo-diretoria'
     | '/movimentacoes'
     | '/pagamentos'
     | '/receitas'
@@ -188,6 +200,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dividas'
     | '/_authenticated/fluxo-semanal'
     | '/_authenticated/importacoes'
+    | '/_authenticated/modo-diretoria'
     | '/_authenticated/movimentacoes'
     | '/_authenticated/pagamentos'
     | '/_authenticated/receitas'
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/modo-diretoria': {
+      id: '/_authenticated/modo-diretoria'
+      path: '/modo-diretoria'
+      fullPath: '/modo-diretoria'
+      preLoaderRoute: typeof AuthenticatedModoDiretoriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/movimentacoes': {
       id: '/_authenticated/movimentacoes'
       path: '/movimentacoes'
@@ -311,6 +331,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDividasRoute: typeof AuthenticatedDividasRoute
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
   AuthenticatedImportacoesRoute: typeof AuthenticatedImportacoesRoute
+  AuthenticatedModoDiretoriaRoute: typeof AuthenticatedModoDiretoriaRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
   AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedReceitasRoute: typeof AuthenticatedReceitasRoute
@@ -326,6 +347,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDividasRoute: AuthenticatedDividasRoute,
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
   AuthenticatedImportacoesRoute: AuthenticatedImportacoesRoute,
+  AuthenticatedModoDiretoriaRoute: AuthenticatedModoDiretoriaRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
   AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedReceitasRoute: AuthenticatedReceitasRoute,
