@@ -18,6 +18,7 @@ import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_aut
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
 import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenticated/importacoes'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
+import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
 import { Route as AuthenticatedReceitasRouteImport } from './routes/_authenticated/receitas'
 import { Route as AuthenticatedVersoesRouteImport } from './routes/_authenticated/versoes'
 
@@ -70,6 +71,11 @@ const AuthenticatedMovimentacoesRoute =
     path: '/movimentacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReceitasRoute = AuthenticatedReceitasRouteImport.update({
   id: '/receitas',
   path: '/receitas',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/receitas': typeof AuthenticatedReceitasRoute
   '/versoes': typeof AuthenticatedVersoesRoute
 }
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/receitas': typeof AuthenticatedReceitasRoute
   '/versoes': typeof AuthenticatedVersoesRoute
   '/': typeof AuthenticatedIndexRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/_authenticated/importacoes': typeof AuthenticatedImportacoesRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
   '/_authenticated/receitas': typeof AuthenticatedReceitasRoute
   '/_authenticated/versoes': typeof AuthenticatedVersoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
+    | '/pagamentos'
     | '/receitas'
     | '/versoes'
   fileRoutesByTo: FileRoutesByTo
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
+    | '/pagamentos'
     | '/receitas'
     | '/versoes'
     | '/'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fluxo-semanal'
     | '/_authenticated/importacoes'
     | '/_authenticated/movimentacoes'
+    | '/_authenticated/pagamentos'
     | '/_authenticated/receitas'
     | '/_authenticated/versoes'
     | '/_authenticated/'
@@ -229,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMovimentacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pagamentos': {
+      id: '/_authenticated/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/receitas': {
       id: '/_authenticated/receitas'
       path: '/receitas'
@@ -253,6 +272,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
   AuthenticatedImportacoesRoute: typeof AuthenticatedImportacoesRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
+  AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedReceitasRoute: typeof AuthenticatedReceitasRoute
   AuthenticatedVersoesRoute: typeof AuthenticatedVersoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -265,6 +285,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
   AuthenticatedImportacoesRoute: AuthenticatedImportacoesRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
+  AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedReceitasRoute: AuthenticatedReceitasRoute,
   AuthenticatedVersoesRoute: AuthenticatedVersoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
