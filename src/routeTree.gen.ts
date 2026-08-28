@@ -18,6 +18,7 @@ import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_aut
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
 import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenticated/importacoes'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
+import { Route as AuthenticatedVersoesRouteImport } from './routes/_authenticated/versoes'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -68,6 +69,11 @@ const AuthenticatedMovimentacoesRoute =
     path: '/movimentacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedVersoesRoute = AuthenticatedVersoesRouteImport.update({
+  id: '/versoes',
+  path: '/versoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/versoes': typeof AuthenticatedVersoesRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/versoes': typeof AuthenticatedVersoesRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/_authenticated/importacoes': typeof AuthenticatedImportacoesRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/_authenticated/versoes': typeof AuthenticatedVersoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
+    | '/versoes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
+    | '/versoes'
     | '/'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fluxo-semanal'
     | '/_authenticated/importacoes'
     | '/_authenticated/movimentacoes'
+    | '/_authenticated/versoes'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
@@ -205,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMovimentacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/versoes': {
+      id: '/_authenticated/versoes'
+      path: '/versoes'
+      fullPath: '/versoes'
+      preLoaderRoute: typeof AuthenticatedVersoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -215,6 +234,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
   AuthenticatedImportacoesRoute: typeof AuthenticatedImportacoesRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
+  AuthenticatedVersoesRoute: typeof AuthenticatedVersoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
@@ -225,6 +245,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
   AuthenticatedImportacoesRoute: AuthenticatedImportacoesRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
+  AuthenticatedVersoesRoute: AuthenticatedVersoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
