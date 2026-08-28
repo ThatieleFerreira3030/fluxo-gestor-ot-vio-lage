@@ -34,14 +34,17 @@ export const Route = createFileRoute("/_authenticated/modo-diretoria")({
 function ModoDiretoria() {
   const { fluxo } = useFluxo();
 
-  const dados = fluxo.semanas.map((s, i) => ({
-    semana: s.rotulo,
-    Saldo: Math.round(fluxo.saldosFinais[i] ?? 0),
-    Geração: Math.round((fluxo.entradasPorSemana[i] ?? 0) - (fluxo.saidasPorSemana[i] ?? 0)),
-  }));
+  const dados = fluxo.semanas.map((s, i) => {
+    const r = fluxo.resultados[i];
+    return {
+      semana: s.rotulo,
+      Saldo: Math.round(r?.saldoFinal ?? 0),
+      Geração: Math.round(r?.liquido ?? 0),
+    };
+  });
 
-  const menorSaldo = Math.min(...(fluxo.saldosFinais.length ? fluxo.saldosFinais : [0]));
-  const semanasNegativas = fluxo.saldosFinais.filter((v) => v < 0).length;
+  const menorSaldo = fluxo.menorSaldo;
+  const semanasNegativas = fluxo.resultados.filter((r) => r.saldoFinal < 0).length;
   const geracao = fluxo.totalEntradas - fluxo.totalSaidas;
 
   return (
