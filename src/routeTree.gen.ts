@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedCenariosRouteImport } from './routes/_authenticated/cenarios'
 import { Route as AuthenticatedConciliacaoRouteImport } from './routes/_authenticated/conciliacao'
 import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_authenticated/disponibilidades'
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
@@ -30,6 +31,11 @@ const AuthRoute = AuthRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCenariosRoute = AuthenticatedCenariosRouteImport.update({
+  id: '/cenarios',
+  path: '/cenarios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConciliacaoRoute =
@@ -66,6 +72,7 @@ const AuthenticatedMovimentacoesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/cenarios': typeof AuthenticatedCenariosRoute
   '/conciliacao': typeof AuthenticatedConciliacaoRoute
   '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/cenarios': typeof AuthenticatedCenariosRoute
   '/conciliacao': typeof AuthenticatedConciliacaoRoute
   '/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/cenarios': typeof AuthenticatedCenariosRoute
   '/_authenticated/conciliacao': typeof AuthenticatedConciliacaoRoute
   '/_authenticated/disponibilidades': typeof AuthenticatedDisponibilidadesRoute
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cenarios'
     | '/conciliacao'
     | '/disponibilidades'
     | '/fluxo-semanal'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/cenarios'
     | '/conciliacao'
     | '/disponibilidades'
     | '/fluxo-semanal'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/cenarios'
     | '/_authenticated/conciliacao'
     | '/_authenticated/disponibilidades'
     | '/_authenticated/fluxo-semanal'
@@ -149,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cenarios': {
+      id: '/_authenticated/cenarios'
+      path: '/cenarios'
+      fullPath: '/cenarios'
+      preLoaderRoute: typeof AuthenticatedCenariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/conciliacao': {
@@ -190,6 +209,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCenariosRoute: typeof AuthenticatedCenariosRoute
   AuthenticatedConciliacaoRoute: typeof AuthenticatedConciliacaoRoute
   AuthenticatedDisponibilidadesRoute: typeof AuthenticatedDisponibilidadesRoute
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
@@ -199,6 +219,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCenariosRoute: AuthenticatedCenariosRoute,
   AuthenticatedConciliacaoRoute: AuthenticatedConciliacaoRoute,
   AuthenticatedDisponibilidadesRoute: AuthenticatedDisponibilidadesRoute,
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
