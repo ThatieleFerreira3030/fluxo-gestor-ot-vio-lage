@@ -27,7 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useFluxo } from "@/lib/dados";
-import { brl, dataBR, iso, num } from "@/lib/format";
+import { brl, dataBR, iso } from "@/lib/format";
 import { exportarExcel } from "@/lib/exportar";
 
 export const Route = createFileRoute("/_authenticated/disponibilidades")({
@@ -220,9 +220,6 @@ function Disponibilidades() {
                   <th className="p-2 font-medium">Conta / Produto</th>
                   <th className="p-2 font-medium">Tipo</th>
                   <th className="p-2 text-right font-medium">Saldo</th>
-                  <th className="p-2 text-right font-medium">% CDI</th>
-                  <th className="p-2 font-medium">Liquidez</th>
-                  <th className="p-2 text-right font-medium">Bloqueado</th>
                 </tr>
               </thead>
               <tbody>
@@ -237,13 +234,6 @@ function Disponibilidades() {
                       <Badge variant="outline">{TIPO_LABEL[d.tipo] ?? d.tipo}</Badge>
                     </td>
                     <td className="num p-2 text-right">{brl(Number(d.saldo))}</td>
-                    <td className="num p-2 text-right">
-                      {d.percentual_cdi ? `${num(d.percentual_cdi, 1)}%` : "—"}
-                    </td>
-                    <td className="p-2 capitalize">{d.liquidez ?? "—"}</td>
-                    <td className="num p-2 text-right text-warning">
-                      {Number(d.valor_bloqueado) ? brl(Number(d.valor_bloqueado)) : "—"}
-                    </td>
                   </tr>
                 ))}
               </tbody>
