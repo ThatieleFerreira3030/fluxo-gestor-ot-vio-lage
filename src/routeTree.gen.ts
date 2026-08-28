@@ -9,27 +9,137 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
+import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
 
-export interface FileRoutesByFullPath {}
-export interface FileRoutesByTo {}
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFluxoSemanalRoute =
+  AuthenticatedFluxoSemanalRouteImport.update({
+    id: '/fluxo-semanal',
+    path: '/fluxo-semanal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMovimentacoesRoute =
+  AuthenticatedMovimentacoesRouteImport.update({
+    id: '/movimentacoes',
+    path: '/movimentacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+
+export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+}
+export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
+  '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/': typeof AuthenticatedIndexRoute
+}
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
+  '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: never
+  fullPaths: '/' | '/auth' | '/fluxo-semanal' | '/movimentacoes'
   fileRoutesByTo: FileRoutesByTo
-  to: never
-  id: '__root__'
+  to: '/auth' | '/fluxo-semanal' | '/movimentacoes' | '/'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/fluxo-semanal'
+    | '/_authenticated/movimentacoes'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren {}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {}
+export interface RootRouteChildren {
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
-const rootRouteChildren: RootRouteChildren = {}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fluxo-semanal': {
+      id: '/_authenticated/fluxo-semanal'
+      path: '/fluxo-semanal'
+      fullPath: '/fluxo-semanal'
+      preLoaderRoute: typeof AuthenticatedFluxoSemanalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/movimentacoes': {
+      id: '/_authenticated/movimentacoes'
+      path: '/movimentacoes'
+      fullPath: '/movimentacoes'
+      preLoaderRoute: typeof AuthenticatedMovimentacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
+  AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
+  AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
