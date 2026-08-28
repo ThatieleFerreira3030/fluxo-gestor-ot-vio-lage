@@ -18,6 +18,7 @@ import { Route as AuthenticatedDisponibilidadesRouteImport } from './routes/_aut
 import { Route as AuthenticatedFluxoSemanalRouteImport } from './routes/_authenticated/fluxo-semanal'
 import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenticated/importacoes'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
+import { Route as AuthenticatedReceitasRouteImport } from './routes/_authenticated/receitas'
 import { Route as AuthenticatedVersoesRouteImport } from './routes/_authenticated/versoes'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -69,6 +70,11 @@ const AuthenticatedMovimentacoesRoute =
     path: '/movimentacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedReceitasRoute = AuthenticatedReceitasRouteImport.update({
+  id: '/receitas',
+  path: '/receitas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedVersoesRoute = AuthenticatedVersoesRouteImport.update({
   id: '/versoes',
   path: '/versoes',
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/receitas': typeof AuthenticatedReceitasRoute
   '/versoes': typeof AuthenticatedVersoesRoute
 }
 export interface FileRoutesByTo {
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/importacoes': typeof AuthenticatedImportacoesRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/receitas': typeof AuthenticatedReceitasRoute
   '/versoes': typeof AuthenticatedVersoesRoute
   '/': typeof AuthenticatedIndexRoute
 }
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/_authenticated/fluxo-semanal': typeof AuthenticatedFluxoSemanalRoute
   '/_authenticated/importacoes': typeof AuthenticatedImportacoesRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
+  '/_authenticated/receitas': typeof AuthenticatedReceitasRoute
   '/_authenticated/versoes': typeof AuthenticatedVersoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
+    | '/receitas'
     | '/versoes'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/fluxo-semanal'
     | '/importacoes'
     | '/movimentacoes'
+    | '/receitas'
     | '/versoes'
     | '/'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fluxo-semanal'
     | '/_authenticated/importacoes'
     | '/_authenticated/movimentacoes'
+    | '/_authenticated/receitas'
     | '/_authenticated/versoes'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -217,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMovimentacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/receitas': {
+      id: '/_authenticated/receitas'
+      path: '/receitas'
+      fullPath: '/receitas'
+      preLoaderRoute: typeof AuthenticatedReceitasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/versoes': {
       id: '/_authenticated/versoes'
       path: '/versoes'
@@ -234,6 +253,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFluxoSemanalRoute: typeof AuthenticatedFluxoSemanalRoute
   AuthenticatedImportacoesRoute: typeof AuthenticatedImportacoesRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
+  AuthenticatedReceitasRoute: typeof AuthenticatedReceitasRoute
   AuthenticatedVersoesRoute: typeof AuthenticatedVersoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
@@ -245,6 +265,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFluxoSemanalRoute: AuthenticatedFluxoSemanalRoute,
   AuthenticatedImportacoesRoute: AuthenticatedImportacoesRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
+  AuthenticatedReceitasRoute: AuthenticatedReceitasRoute,
   AuthenticatedVersoesRoute: AuthenticatedVersoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
