@@ -146,7 +146,7 @@ function Disponibilidades() {
                   Banco: d.banco,
                   Agência: d.agencia,
                   Conta: d.conta,
-                  Tipo: TIPO_LABEL[d.tipo] ?? d.tipo,
+                  Tipo: TIPO_LABEL[tipoChave(d.tipo)] ?? d.tipo,
                   Produto: d.produto,
                   Saldo: Number(d.saldo),
                   "% CDI": d.percentual_cdi,
@@ -246,7 +246,7 @@ function Disponibilidades() {
                       {d.produto ?? [d.agencia, d.conta].filter(Boolean).join(" / ") ?? "—"}
                     </td>
                     <td className="p-2">
-                      <Badge variant="outline">{TIPO_LABEL[d.tipo] ?? d.tipo}</Badge>
+                      <Badge variant="outline">{TIPO_LABEL[tipoChave(d.tipo)] ?? d.tipo}</Badge>
                     </td>
                     <td className="num p-2 text-right">{brl(Number(d.saldo))}</td>
                   </tr>
