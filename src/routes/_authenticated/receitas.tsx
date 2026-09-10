@@ -32,14 +32,6 @@ export const Route = createFileRoute("/_authenticated/receitas")({
 
 function Receitas() {
   const { fluxo, movimentacoes, empresas } = useFluxo();
-  const abate = useQuery({
-    queryKey: ["receitas_abate"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("receitas_abate").select("*").order("data_prevista");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
   const entradas = movimentacoes.filter((m) => m.natureza === "entrada");
@@ -48,8 +40,31 @@ function Receitas() {
     .map((l) => ({ categoria: l.categoria, Total: Math.round(l.total) }))
     .sort((a, b) => b.Total - a.Total);
 
-  const totalAbate = (abate.data ?? []).reduce((a, r) => a + Number(r.faturamento_projetado), 0);
-  const cabecas = (abate.data ?? []).reduce((a, r) => a + Number(r.quantidade), 0);
+  // Programação de abate = aba "Abate de bovinos" da planilha Entradas (versão ativa).
+  const abate = entradas
+    .filter((m) => m.categoria === "Abate de bovinos")
+    .map((m) => {
+      const d = ((m as unknown as { detalhe?: Record<string, unknown> }).detalhe ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const txt = (v: unknown) => (v === null || v === undefined || v === "" ? null : String(v));
+      return {
+        id: m.id,
+        data_prevista: m.data_prevista,
+        data_abate: txt(d["Data Abate"]),
+        categoria_animal: txt(d["Categoria"]),
+        mercado: txt(d["Mercado"]),
+        destino: txt(d["Destino"]),
+        quantidade: Number(d["QTDE"] ?? 0),
+        faturamento: Number(m.valor_liquido || m.valor_original || 0),
+        status: m.status,
+      };
+    })
+    .sort((a, b) => a.data_prevista.localeCompare(b.data_prevista));
+
+  const totalAbate = abate.reduce((a, r) => a + r.faturamento, 0);
+  const cabecas = abate.reduce((a, r) => a + r.quantidade, 0);
 
   return (
     <div>
