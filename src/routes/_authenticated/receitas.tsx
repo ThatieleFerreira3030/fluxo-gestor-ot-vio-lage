@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Download } from "lucide-react";
 import { FiltrosBar } from "@/components/FiltrosBar";
@@ -7,7 +6,6 @@ import { Kpi } from "@/components/Kpi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useFluxo } from "@/lib/dados";
 import { brl, dataBR, num } from "@/lib/format";
 import { STATUS_LABEL } from "@/lib/constants";
@@ -32,14 +30,6 @@ export const Route = createFileRoute("/_authenticated/receitas")({
 
 function Receitas() {
   const { fluxo, movimentacoes, empresas } = useFluxo();
-  const abate = useQuery({
-    queryKey: ["receitas_abate"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("receitas_abate").select("*").order("data_prevista");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
   const entradas = movimentacoes.filter((m) => m.natureza === "entrada");
@@ -48,8 +38,31 @@ function Receitas() {
     .map((l) => ({ categoria: l.categoria, Total: Math.round(l.total) }))
     .sort((a, b) => b.Total - a.Total);
 
-  const totalAbate = (abate.data ?? []).reduce((a, r) => a + Number(r.faturamento_projetado), 0);
-  const cabecas = (abate.data ?? []).reduce((a, r) => a + Number(r.quantidade), 0);
+  // Programação de abate = aba "Abate de bovinos" da planilha Entradas (versão ativa).
+  const abate = entradas
+    .filter((m) => m.categoria === "Abate de bovinos")
+    .map((m) => {
+      const d = ((m as unknown as { detalhe?: Record<string, unknown> }).detalhe ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const txt = (v: unknown) => (v === null || v === undefined || v === "" ? null : String(v));
+      return {
+        id: m.id,
+        data_prevista: m.data_prevista,
+        data_abate: txt(d["Data Abate"]),
+        categoria_animal: txt(d["Categoria"]),
+        mercado: txt(d["Mercado"]),
+        destino: txt(d["Destino"]),
+        quantidade: Number(d["QTDE"] ?? 0),
+        faturamento: Number(m.valor_liquido || m.valor_original || 0),
+        status: m.status,
+      };
+    })
+    .sort((a, b) => a.data_prevista.localeCompare(b.data_prevista));
+
+  const totalAbate = abate.reduce((a, r) => a + r.faturamento, 0);
+  const cabecas = abate.reduce((a, r) => a + r.quantidade, 0);
 
   return (
     <div>
@@ -108,32 +121,36 @@ function Receitas() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/70">
                 <tr className="text-left">
-                  <th className="p-2 font-medium">Empresa</th>
                   <th className="p-2 font-medium">Data prevista</th>
+                  <th className="p-2 font-medium">Abate</th>
                   <th className="p-2 font-medium">Categoria</th>
+                  <th className="p-2 font-medium">Destino / mercado</th>
                   <th className="p-2 text-right font-medium">Qtd.</th>
                   <th className="p-2 text-right font-medium">Faturamento</th>
                   <th className="p-2 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {(abate.data ?? []).map((r) => (
+                {abate.map((r) => (
                   <tr key={r.id} className="border-t">
-                    <td className="p-2">{nomeEmpresa(r.empresa_id)}</td>
                     <td className="p-2">{dataBR(r.data_prevista)}</td>
+                    <td className="p-2">{r.data_abate ? dataBR(r.data_abate) : "—"}</td>
                     <td className="p-2">{r.categoria_animal ?? "—"}</td>
-                    <td className="num p-2 text-right">{num(r.quantidade)}</td>
+                    <td className="p-2">
+                      {[r.destino, r.mercado].filter(Boolean).join(" · ") || "—"}
+                    </td>
+                    <td className="num p-2 text-right">{r.quantidade ? num(r.quantidade) : "—"}</td>
                     <td className="num p-2 text-right text-success">
-                      {brl(Number(r.faturamento_projetado), true)}
+                      {brl(r.faturamento, true)}
                     </td>
                     <td className="p-2">
                       <Badge variant="outline">{STATUS_LABEL[r.status] ?? r.status}</Badge>
                     </td>
                   </tr>
                 ))}
-                {!(abate.data ?? []).length && (
+                {!abate.length && (
                   <tr>
-                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={7} className="p-6 text-center text-muted-foreground">
                       Sem programação de abate cadastrada.
                     </td>
                   </tr>
