@@ -123,30 +123,34 @@ function Receitas() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/70">
                 <tr className="text-left">
-                  <th className="p-2 font-medium">Empresa</th>
                   <th className="p-2 font-medium">Data prevista</th>
+                  <th className="p-2 font-medium">Abate</th>
                   <th className="p-2 font-medium">Categoria</th>
+                  <th className="p-2 font-medium">Destino / mercado</th>
                   <th className="p-2 text-right font-medium">Qtd.</th>
                   <th className="p-2 text-right font-medium">Faturamento</th>
                   <th className="p-2 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {(abate.data ?? []).map((r) => (
+                {abate.map((r) => (
                   <tr key={r.id} className="border-t">
-                    <td className="p-2">{nomeEmpresa(r.empresa_id)}</td>
                     <td className="p-2">{dataBR(r.data_prevista)}</td>
+                    <td className="p-2">{r.data_abate ? dataBR(r.data_abate) : "—"}</td>
                     <td className="p-2">{r.categoria_animal ?? "—"}</td>
-                    <td className="num p-2 text-right">{num(r.quantidade)}</td>
+                    <td className="p-2">
+                      {[r.destino, r.mercado].filter(Boolean).join(" · ") || "—"}
+                    </td>
+                    <td className="num p-2 text-right">{r.quantidade ? num(r.quantidade) : "—"}</td>
                     <td className="num p-2 text-right text-success">
-                      {brl(Number(r.faturamento_projetado), true)}
+                      {brl(r.faturamento, true)}
                     </td>
                     <td className="p-2">
                       <Badge variant="outline">{STATUS_LABEL[r.status] ?? r.status}</Badge>
                     </td>
                   </tr>
                 ))}
-                {!(abate.data ?? []).length && (
+                {!abate.length && (
                   <tr>
                     <td colSpan={6} className="p-6 text-center text-muted-foreground">
                       Sem programação de abate cadastrada.
