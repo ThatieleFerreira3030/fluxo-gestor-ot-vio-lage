@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFluxo } from "@/lib/dados";
 import { brl, dataBR, iso } from "@/lib/format";
 import { exportarExcel } from "@/lib/exportar";
+import { nomeBanco } from "@/lib/bancos";
 
 export const Route = createFileRoute("/_authenticated/disponibilidades")({
   head: () => ({
@@ -100,7 +101,8 @@ function Disponibilidades() {
 
   const porBanco = Object.entries(
     disponibilidades.reduce<Record<string, number>>((acc, d) => {
-      acc[d.banco] = (acc[d.banco] ?? 0) + Number(d.saldo);
+      const b = nomeBanco(d.banco);
+      acc[b] = (acc[b] ?? 0) + Number(d.saldo);
       return acc;
     }, {}),
   ).sort((a, b) => b[1] - a[1]);
@@ -143,7 +145,8 @@ function Disponibilidades() {
               exportarExcel(
                 disponibilidades.map((d) => ({
                   Empresa: nomeEmpresa(d.empresa_id),
-                  Banco: d.banco,
+                  Banco: nomeBanco(d.banco),
+                  "Descrição original": d.banco,
                   Agência: d.agencia,
                   Conta: d.conta,
                   Tipo: TIPO_LABEL[tipoChave(d.tipo)] ?? d.tipo,
@@ -241,7 +244,9 @@ function Disponibilidades() {
                 {disponibilidades.map((d) => (
                   <tr key={d.id} className="border-t hover:bg-muted/40">
                     <td className="p-2">{nomeEmpresa(d.empresa_id)}</td>
-                    <td className="p-2 font-medium">{d.banco}</td>
+                    <td className="p-2 font-medium" title={d.banco}>
+                      {nomeBanco(d.banco)}
+                    </td>
                     <td className="p-2 text-xs text-muted-foreground">
                       {d.produto ?? [d.agencia, d.conta].filter(Boolean).join(" / ") ?? "—"}
                     </td>
