@@ -29,7 +29,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFluxo } from "@/lib/dados";
 import { brl, dataBR, iso } from "@/lib/format";
 import { exportarExcel } from "@/lib/exportar";
-import { nomeBanco } from "@/lib/bancos";
+import { nomeBanco, tipoChave } from "@/lib/bancos";
 
 export const Route = createFileRoute("/_authenticated/disponibilidades")({
   head: () => ({
@@ -56,20 +56,6 @@ const TIPO_LABEL: Record<string, string> = {
   poupanca: "Poupança",
 };
 
-/** A planilha traz o tipo em caixa alta e com acentos ("APLICAÇÃO", "CONTA POUPANÇA"). */
-function tipoChave(tipo: string) {
-  const t = (tipo ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-  if (t.includes("quota")) return "quotas";
-  if (t.includes("aplic")) return "aplicacao";
-  if (t.includes("poupan")) return "poupanca";
-  if (t.includes("caixa")) return "caixa";
-  if (t.includes("corrente") || t.includes("conta")) return "conta_corrente";
-  return t.replace(/\s+/g, "_");
-}
 
 function Disponibilidades() {
   const { disponibilidades, empresas, carregando } = useFluxo();
