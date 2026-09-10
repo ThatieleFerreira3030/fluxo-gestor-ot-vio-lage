@@ -170,13 +170,31 @@ export const useMovimentacoes = () => {
     queryKey: ["movimentacoes", loteId],
     enabled: !lote.isLoading,
     queryFn: async () => {
-      let q = supabase.from("movimentacoes").select("*").order("data_prevista").limit(50000);
-      // Depois da primeira publicação, só a versão ativa alimenta o fluxo.
-      if (loteId) q = q.eq("lote_id", loteId);
-      else q = q.is("lote_id", null);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as unknown as Movimentacao[];
+      const tamanhoPagina = 1000;
+      const todas: Movimentacao[] = [];
+
+      // A API entrega no máximo 1.000 linhas por resposta. Busca todas as páginas
+      // para que o horizonte use a base ativa completa, inclusive datas distantes.
+      for (let inicio = 0; ; inicio += tamanhoPagina) {
+        let q = supabase
+          .from("movimentacoes")
+          .select("*")
+          .order("data_prevista")
+          .order("id")
+          .range(inicio, inicio + tamanhoPagina - 1);
+        // Depois da primeira publicação, só a versão ativa alimenta o fluxo.
+        if (loteId) q = q.eq("lote_id", loteId);
+        else q = q.is("lote_id", null);
+
+        const { data, error } = await q;
+        if (error) throw error;
+
+        const pagina = (data ?? []) as unknown as Movimentacao[];
+        todas.push(...pagina);
+        if (pagina.length < tamanhoPagina) break;
+      }
+
+      return todas;
     },
   });
 };
