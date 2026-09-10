@@ -79,7 +79,7 @@ export function DetalheMovimentacoes({
               </tr>
             </thead>
             <tbody>
-              {movimentacoes.slice(0, 400).map((m) => (
+              {movimentacoes.slice(0, visiveis).map((m) => (
                 <tr key={m.id} className="border-t">
                   <td className="p-2">{nomeEmpresa(m.empresa_id)}</td>
                   <td className="p-2">{m.categoria}</td>

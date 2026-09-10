@@ -54,7 +54,7 @@ export const STATUS_LABEL: Record<string, string> = {
   cancelado: "Cancelado",
 };
 
-export const HORIZONTES = [4, 8, 13, 26, 52];
+export const HORIZONTES = [4, 8, 12, 16, 20, 24, 25, 26, 27, 28, 29, 30, 39, 52, 104];
 
 export const TIPOS_FONTE = [
   { valor: "contas_a_pagar", rotulo: "Contas a pagar" },
