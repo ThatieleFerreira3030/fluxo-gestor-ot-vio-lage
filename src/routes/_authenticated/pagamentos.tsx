@@ -32,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/pagamentos")({
 function Pagamentos() {
   const { fluxo, movimentacoes, empresas } = useFluxo();
   const [categoria, setCategoria] = useState<string | null>(null);
+  const [visiveis, setVisiveis] = useState(400);
 
   const saidas = movimentacoes.filter((m) => m.natureza === "saida");
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
@@ -113,7 +114,7 @@ function Pagamentos() {
               </tr>
             </thead>
             <tbody>
-              {saidas.slice(0, 400).map((m) => (
+              {saidas.slice(0, visiveis).map((m) => (
                 <tr key={m.id} className="border-t hover:bg-muted/40">
                   <td className="p-2">{nomeEmpresa(m.empresa_id)}</td>
                   <td className="p-2">{m.categoria}</td>
@@ -125,6 +126,13 @@ function Pagamentos() {
               ))}
             </tbody>
           </table>
+          {saidas.length > visiveis && (
+            <div className="border-t p-3 text-center">
+              <Button variant="outline" size="sm" onClick={() => setVisiveis((v) => v + 400)}>
+                Carregar mais ({saidas.length - visiveis} restantes)
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 

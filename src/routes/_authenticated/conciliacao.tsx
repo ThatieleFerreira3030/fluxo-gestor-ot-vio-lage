@@ -165,7 +165,7 @@ function Conciliacao() {
                   </tr>
                 </thead>
                 <tbody>
-                  {semClassificacao.slice(0, 100).map((m) => (
+                  {semClassificacao.slice(0, 500).map((m) => (
                     <tr key={m.id} className="border-t">
                       <td className="p-2">{m.descricao ?? "—"}</td>
                       <td className="p-2">{m.contraparte ?? "—"}</td>

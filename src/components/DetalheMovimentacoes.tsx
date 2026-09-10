@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { brl, dataBR } from "@/lib/format";
@@ -30,6 +31,7 @@ export function DetalheMovimentacoes({
 }) {
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
   const total = movimentacoes.reduce((a, m) => a + Number(m.valor_liquido), 0);
+  const [visiveis, setVisiveis] = useState(400);
 
   return (
     <Dialog open={aberto} onOpenChange={(v) => !v && aoFechar()}>
@@ -79,7 +81,7 @@ export function DetalheMovimentacoes({
               </tr>
             </thead>
             <tbody>
-              {movimentacoes.slice(0, 400).map((m) => (
+              {movimentacoes.slice(0, visiveis).map((m) => (
                 <tr key={m.id} className="border-t">
                   <td className="p-2">{nomeEmpresa(m.empresa_id)}</td>
                   <td className="p-2">{m.categoria}</td>
@@ -100,6 +102,13 @@ export function DetalheMovimentacoes({
               ))}
             </tbody>
           </table>
+          {movimentacoes.length > visiveis && (
+            <div className="border-t p-3 text-center">
+              <Button variant="outline" size="sm" onClick={() => setVisiveis((v) => v + 400)}>
+                Carregar mais ({movimentacoes.length - visiveis} restantes)
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

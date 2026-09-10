@@ -59,7 +59,7 @@ type Ctx = {
 const FiltrosCtx = createContext<Ctx>({
   filtros: {
     dataBase: "",
-    horizonte: 13,
+    horizonte: 12,
     empresaIds: [],
     grupo: "todos",
     cenarioId: "",
@@ -112,7 +112,7 @@ export const useLotes = () =>
 export function FiltrosProvider({ children }: { children: ReactNode }) {
   const [filtros, setF] = useState<Filtros>({
     dataBase: iso(inicioSemana(new Date())),
-    horizonte: 13,
+    horizonte: 12,
     empresaIds: [],
     grupo: "todos",
     cenarioId: "",
