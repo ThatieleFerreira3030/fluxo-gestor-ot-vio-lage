@@ -116,6 +116,7 @@ export function FiltrosBar() {
               {HORIZONTES.map((h) => (
                 <SelectItem key={h} value={String(h)}>
                   {h} semanas
+                  {h >= 52 ? ` (~${Math.round((h / 52) * 10) / 10} ano${h >= 104 ? "s" : ""})` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
