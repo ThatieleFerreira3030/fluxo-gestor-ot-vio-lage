@@ -227,6 +227,9 @@ export type Database = {
           agencia: string | null
           banco: string
           carencia: string | null
+          chave_origem: string | null
+          codigo_conta: string | null
+          coligada: string | null
           conta: string | null
           created_at: string
           data_base: string
@@ -237,6 +240,7 @@ export type Database = {
           fonte: string | null
           id: string
           liquidez: string | null
+          lote_id: string | null
           observacao: string | null
           percentual_cdi: number | null
           produto: string | null
@@ -249,6 +253,9 @@ export type Database = {
           agencia?: string | null
           banco: string
           carencia?: string | null
+          chave_origem?: string | null
+          codigo_conta?: string | null
+          coligada?: string | null
           conta?: string | null
           created_at?: string
           data_base: string
@@ -259,6 +266,7 @@ export type Database = {
           fonte?: string | null
           id?: string
           liquidez?: string | null
+          lote_id?: string | null
           observacao?: string | null
           percentual_cdi?: number | null
           produto?: string | null
@@ -271,6 +279,9 @@ export type Database = {
           agencia?: string | null
           banco?: string
           carencia?: string | null
+          chave_origem?: string | null
+          codigo_conta?: string | null
+          coligada?: string | null
           conta?: string | null
           created_at?: string
           data_base?: string
@@ -281,6 +292,7 @@ export type Database = {
           fonte?: string | null
           id?: string
           liquidez?: string | null
+          lote_id?: string | null
           observacao?: string | null
           percentual_cdi?: number | null
           produto?: string | null
@@ -295,6 +307,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidades_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "lotes_importacao"
             referencedColumns: ["id"]
           },
         ]
@@ -377,11 +396,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lotes_importacao: {
+        Row: {
+          arquivos: Json
+          avisos: Json
+          created_at: string
+          data_base: string
+          id: string
+          numero: number
+          publicado_em: string | null
+          status: string
+          totais: Json
+          updated_at: string
+          usuario: string | null
+        }
+        Insert: {
+          arquivos?: Json
+          avisos?: Json
+          created_at?: string
+          data_base: string
+          id?: string
+          numero: number
+          publicado_em?: string | null
+          status?: string
+          totais?: Json
+          updated_at?: string
+          usuario?: string | null
+        }
+        Update: {
+          arquivos?: Json
+          avisos?: Json
+          created_at?: string
+          data_base?: string
+          id?: string
+          numero?: number
+          publicado_em?: string | null
+          status?: string
+          totais?: Json
+          updated_at?: string
+          usuario?: string | null
+        }
+        Relationships: []
+      }
       movimentacoes: {
         Row: {
           banco: string | null
           categoria: string
           cenario_id: string | null
+          chave_origem: string | null
           competencia: string | null
           contraparte: string | null
           cpf_cnpj: string | null
@@ -392,6 +454,7 @@ export type Database = {
           data_vencimento: string | null
           demo: boolean
           descricao: string | null
+          detalhe: Json | null
           documento: string | null
           editado_manual: boolean
           empresa_id: string | null
@@ -399,6 +462,7 @@ export type Database = {
           fonte: string | null
           id: string
           importacao_id: string | null
+          lote_id: string | null
           natureza: Database["public"]["Enums"]["natureza_mov"]
           observacao: string | null
           responsavel: string | null
@@ -415,6 +479,7 @@ export type Database = {
           banco?: string | null
           categoria?: string
           cenario_id?: string | null
+          chave_origem?: string | null
           competencia?: string | null
           contraparte?: string | null
           cpf_cnpj?: string | null
@@ -425,6 +490,7 @@ export type Database = {
           data_vencimento?: string | null
           demo?: boolean
           descricao?: string | null
+          detalhe?: Json | null
           documento?: string | null
           editado_manual?: boolean
           empresa_id?: string | null
@@ -432,6 +498,7 @@ export type Database = {
           fonte?: string | null
           id?: string
           importacao_id?: string | null
+          lote_id?: string | null
           natureza: Database["public"]["Enums"]["natureza_mov"]
           observacao?: string | null
           responsavel?: string | null
@@ -448,6 +515,7 @@ export type Database = {
           banco?: string | null
           categoria?: string
           cenario_id?: string | null
+          chave_origem?: string | null
           competencia?: string | null
           contraparte?: string | null
           cpf_cnpj?: string | null
@@ -458,6 +526,7 @@ export type Database = {
           data_vencimento?: string | null
           demo?: boolean
           descricao?: string | null
+          detalhe?: Json | null
           documento?: string | null
           editado_manual?: boolean
           empresa_id?: string | null
@@ -465,6 +534,7 @@ export type Database = {
           fonte?: string | null
           id?: string
           importacao_id?: string | null
+          lote_id?: string | null
           natureza?: Database["public"]["Enums"]["natureza_mov"]
           observacao?: string | null
           responsavel?: string | null
@@ -490,6 +560,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "lotes_importacao"
             referencedColumns: ["id"]
           },
           {
@@ -813,6 +890,7 @@ export type Database = {
         Returns: boolean
       }
       is_editor: { Args: never; Returns: boolean }
+      publicar_lote: { Args: { _lote: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "financeiro" | "diretoria"
@@ -838,12 +916,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -867,11 +945,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -892,11 +970,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -917,11 +995,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -934,11 +1012,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

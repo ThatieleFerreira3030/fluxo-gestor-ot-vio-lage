@@ -6,25 +6,26 @@ export const CATEGORIAS_ENTRADA = [
   "Cliente Touro",
   "Cliente Palmeiras",
   "Látex",
+  "Remuneração de avais",
   "StoneX",
-  "Remuneração de aval",
   "Outros recebimentos",
   "Operações de crédito",
 ] as const;
 
 export const CATEGORIAS_PAGAMENTO = [
   "Compra de bovinos",
-  "Folha salarial",
-  "PPR e bônus executivo",
+  "Folha Salarial",
   "Impostos",
   "Parcelamentos",
-  "Compra de ações",
   "Dividendos aos sócios",
+  "Despesas Gerais",
+  "PPR e bônus executivo",
+  "Compra de ações",
   "StoneX",
-  "Despesas gerais",
 ] as const;
 
 export const CATEGORIAS_AMORTIZACAO = [
+  "Amortização de dívidas bancárias",
   "Bradesco",
   "Safra",
   "Sicredi",

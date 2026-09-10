@@ -1,8 +1,12 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularFluxo, montarSemanas, type Cenario, type Movimentacao } from "./fluxo";
-import { inicioSemana, iso } from "./format";
+import { addDias, inicioSemana, iso, toDate } from "./format";
+
+/** Quotas não compõem o saldo inicial do fluxo. */
+const ehQuota = (tipo: string) =>
+  tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("quota");
 
 export type Empresa = {
   id: string;
@@ -32,6 +36,9 @@ export type Disponibilidade = {
   fonte: string | null;
   responsavel: string | null;
   demo: boolean;
+  coligada?: string | null;
+  codigo_conta?: string | null;
+  lote_id?: string | null;
 };
 
 type Filtros = {
@@ -61,6 +68,47 @@ const FiltrosCtx = createContext<Ctx>({
   setFiltros: () => {},
 });
 
+export type LoteImportacao = {
+  id: string;
+  numero: number;
+  data_base: string;
+  status: string;
+  arquivos: Record<string, unknown>;
+  totais: Record<string, number>;
+  avisos: unknown;
+  usuario: string | null;
+  publicado_em: string | null;
+  created_at: string;
+};
+
+/** Atualização semanal atualmente publicada (única versão ativa). */
+export const useLoteAtivo = () =>
+  useQuery({
+    queryKey: ["lote-ativo"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lotes_importacao")
+        .select("*")
+        .eq("status", "ativo")
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as LoteImportacao | null;
+    },
+  });
+
+export const useLotes = () =>
+  useQuery({
+    queryKey: ["lotes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lotes_importacao")
+        .select("*")
+        .order("numero", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as LoteImportacao[];
+    },
+  });
+
 export function FiltrosProvider({ children }: { children: ReactNode }) {
   const [filtros, setF] = useState<Filtros>({
     dataBase: iso(inicioSemana(new Date())),
@@ -70,8 +118,24 @@ export function FiltrosProvider({ children }: { children: ReactNode }) {
     cenarioId: "",
     status: "todos",
   });
+  const lote = useLoteAtivo();
+  const dataBaseLote = lote.data?.data_base ?? null;
+  const [dataBaseManual, setDataBaseManual] = useState(false);
+
+  useEffect(() => {
+    if (!dataBaseLote || dataBaseManual) return;
+    const inicio = iso(inicioSemana(addDias(toDate(dataBaseLote), 1)));
+    setF((a) => (a.dataBase === inicio ? a : { ...a, dataBase: inicio }));
+  }, [dataBaseLote, dataBaseManual]);
+
   const valor = useMemo(
-    () => ({ filtros, setFiltros: (p: Partial<Filtros>) => setF((a) => ({ ...a, ...p })) }),
+    () => ({
+      filtros,
+      setFiltros: (p: Partial<Filtros>) => {
+        if (p.dataBase) setDataBaseManual(true);
+        setF((a) => ({ ...a, ...p }));
+      },
+    }),
     [filtros],
   );
   return <FiltrosCtx.Provider value={valor}>{children}</FiltrosCtx.Provider>;
@@ -99,33 +163,45 @@ export const useCenarios = () =>
     },
   });
 
-export const useMovimentacoes = () =>
-  useQuery({
-    queryKey: ["movimentacoes"],
+export const useMovimentacoes = () => {
+  const lote = useLoteAtivo();
+  const loteId = lote.data?.id ?? null;
+  return useQuery({
+    queryKey: ["movimentacoes", loteId],
+    enabled: !lote.isLoading,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("movimentacoes")
-        .select("*")
-        .order("data_prevista")
-        .limit(20000);
+      let q = supabase.from("movimentacoes").select("*").order("data_prevista").limit(50000);
+      // Depois da primeira publicação, só a versão ativa alimenta o fluxo.
+      if (loteId) q = q.eq("lote_id", loteId);
+      else q = q.is("lote_id", null);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as Movimentacao[];
     },
   });
+};
 
-export const useDisponibilidades = () =>
-  useQuery({
-    queryKey: ["disponibilidades"],
+export const useDisponibilidades = () => {
+  const lote = useLoteAtivo();
+  const loteId = lote.data?.id ?? null;
+  return useQuery({
+    queryKey: ["disponibilidades", loteId],
+    enabled: !lote.isLoading,
     queryFn: async () => {
-      const { data, error } = await supabase.from("disponibilidades").select("*").order("banco");
+      let q = supabase.from("disponibilidades").select("*").order("banco");
+      if (loteId) q = q.eq("lote_id", loteId);
+      else q = q.is("lote_id", null);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as Disponibilidade[];
     },
   });
+};
 
 /** Fluxo consolidado já aplicando os filtros globais. */
 export function useFluxo() {
   const { filtros } = useFiltros();
+  const lote = useLoteAtivo();
   const empresas = useEmpresas();
   const cenarios = useCenarios();
   const movs = useMovimentacoes();
@@ -166,8 +242,9 @@ export function useFluxo() {
     [disp.data, idsPermitidos],
   );
 
+  // Saldo inicial = soma dos saldos disponíveis, exceto Quotas.
   const saldoInicial = disponibilidades
-    .filter((d) => d.disponivel_resgate)
+    .filter((d) => d.disponivel_resgate && !ehQuota(d.tipo ?? ""))
     .reduce((a, d) => a + Number(d.saldo) - Number(d.valor_bloqueado ?? 0), 0);
 
   const semanas = useMemo(
@@ -188,6 +265,7 @@ export function useFluxo() {
     empresasFiltradas,
     movimentacoes,
     disponibilidades,
+    lote: lote.data ?? null,
     carregando: movs.isLoading || disp.isLoading || empresas.isLoading,
   };
 }

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAtualizacaoSemanalRouteImport } from './routes/_authenticated/atualizacao-semanal'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedCenariosRouteImport } from './routes/_authenticated/cenarios'
 import { Route as AuthenticatedConciliacaoRouteImport } from './routes/_authenticated/conciliacao'
@@ -39,6 +40,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAtualizacaoSemanalRoute =
+  AuthenticatedAtualizacaoSemanalRouteImport.update({
+    id: '/atualizacao-semanal',
+    path: '/atualizacao-semanal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
   id: '/cadastros',
   path: '/cadastros',
@@ -109,6 +116,7 @@ const AuthenticatedVersoesRoute = AuthenticatedVersoesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/atualizacao-semanal': typeof AuthenticatedAtualizacaoSemanalRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/cenarios': typeof AuthenticatedCenariosRoute
   '/conciliacao': typeof AuthenticatedConciliacaoRoute
@@ -124,6 +132,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/atualizacao-semanal': typeof AuthenticatedAtualizacaoSemanalRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/cenarios': typeof AuthenticatedCenariosRoute
   '/conciliacao': typeof AuthenticatedConciliacaoRoute
@@ -142,6 +151,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/atualizacao-semanal': typeof AuthenticatedAtualizacaoSemanalRoute
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/cenarios': typeof AuthenticatedCenariosRoute
   '/_authenticated/conciliacao': typeof AuthenticatedConciliacaoRoute
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/atualizacao-semanal'
     | '/cadastros'
     | '/cenarios'
     | '/conciliacao'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/atualizacao-semanal'
     | '/cadastros'
     | '/cenarios'
     | '/conciliacao'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/atualizacao-semanal'
     | '/_authenticated/cadastros'
     | '/_authenticated/cenarios'
     | '/_authenticated/conciliacao'
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/atualizacao-semanal': {
+      id: '/_authenticated/atualizacao-semanal'
+      path: '/atualizacao-semanal'
+      fullPath: '/atualizacao-semanal'
+      preLoaderRoute: typeof AuthenticatedAtualizacaoSemanalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadastros': {
@@ -324,6 +344,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAtualizacaoSemanalRoute: typeof AuthenticatedAtualizacaoSemanalRoute
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedCenariosRoute: typeof AuthenticatedCenariosRoute
   AuthenticatedConciliacaoRoute: typeof AuthenticatedConciliacaoRoute
@@ -340,6 +361,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAtualizacaoSemanalRoute: AuthenticatedAtualizacaoSemanalRoute,
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedCenariosRoute: AuthenticatedCenariosRoute,
   AuthenticatedConciliacaoRoute: AuthenticatedConciliacaoRoute,
