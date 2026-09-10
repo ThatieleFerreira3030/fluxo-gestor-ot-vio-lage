@@ -55,6 +55,21 @@ const TIPO_LABEL: Record<string, string> = {
   poupanca: "Poupança",
 };
 
+/** A planilha traz o tipo em caixa alta e com acentos ("APLICAÇÃO", "CONTA POUPANÇA"). */
+function tipoChave(tipo: string) {
+  const t = (tipo ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  if (t.includes("quota")) return "quotas";
+  if (t.includes("aplic")) return "aplicacao";
+  if (t.includes("poupan")) return "poupanca";
+  if (t.includes("caixa")) return "caixa";
+  if (t.includes("corrente") || t.includes("conta")) return "conta_corrente";
+  return t.replace(/\s+/g, "_");
+}
+
 function Disponibilidades() {
   const { disponibilidades, empresas, carregando } = useFluxo();
   const { podeEditar } = useAuth();
@@ -75,12 +90,12 @@ function Disponibilidades() {
   });
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
-  const quotas = disponibilidades.filter((d) => d.tipo === "quotas");
-  const semQuotas = disponibilidades.filter((d) => d.tipo !== "quotas");
+  const quotas = disponibilidades.filter((d) => tipoChave(d.tipo) === "quotas");
+  const semQuotas = disponibilidades.filter((d) => tipoChave(d.tipo) !== "quotas");
   const contas = disponibilidades.filter((d) =>
-    ["conta_corrente", "caixa", "poupanca"].includes(d.tipo),
+    ["conta_corrente", "caixa", "poupanca"].includes(tipoChave(d.tipo)),
   );
-  const aplicacoes = disponibilidades.filter((d) => d.tipo === "aplicacao");
+  const aplicacoes = disponibilidades.filter((d) => tipoChave(d.tipo) === "aplicacao");
   const soma = (l: typeof disponibilidades) => l.reduce((a, d) => a + Number(d.saldo), 0);
 
   const porBanco = Object.entries(
@@ -131,7 +146,7 @@ function Disponibilidades() {
                   Banco: d.banco,
                   Agência: d.agencia,
                   Conta: d.conta,
-                  Tipo: TIPO_LABEL[d.tipo] ?? d.tipo,
+                  Tipo: TIPO_LABEL[tipoChave(d.tipo)] ?? d.tipo,
                   Produto: d.produto,
                   Saldo: Number(d.saldo),
                   "% CDI": d.percentual_cdi,
@@ -231,7 +246,7 @@ function Disponibilidades() {
                       {d.produto ?? [d.agencia, d.conta].filter(Boolean).join(" / ") ?? "—"}
                     </td>
                     <td className="p-2">
-                      <Badge variant="outline">{TIPO_LABEL[d.tipo] ?? d.tipo}</Badge>
+                      <Badge variant="outline">{TIPO_LABEL[tipoChave(d.tipo)] ?? d.tipo}</Badge>
                     </td>
                     <td className="num p-2 text-right">{brl(Number(d.saldo))}</td>
                   </tr>
