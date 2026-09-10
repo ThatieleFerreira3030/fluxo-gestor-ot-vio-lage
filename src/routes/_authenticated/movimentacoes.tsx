@@ -76,6 +76,7 @@ function Movimentacoes() {
   const [editando, setEditando] = useState<Movimentacao | null>(null);
   const [form, setForm] = useState<Record<string, unknown>>(vazio);
   const [motivo, setMotivo] = useState("");
+  const [visiveis, setVisiveis] = useState(500);
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
 
@@ -238,7 +239,7 @@ function Movimentacoes() {
               </tr>
             </thead>
             <tbody>
-              {lista.slice(0, 500).map((m) => (
+              {lista.slice(0, visiveis).map((m) => (
                 <tr key={m.id} className="border-t hover:bg-muted/40">
                   <td className="p-2">{nomeEmpresa(m.empresa_id)}</td>
                   <td className="p-2">
