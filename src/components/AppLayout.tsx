@@ -9,6 +9,7 @@ import {
   Receipt,
   Banknote,
   Upload,
+  FileUp,
   ShieldCheck,
   GitCompare,
   History,
@@ -22,7 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { dataBR, dataHoraBR } from "@/lib/format";
-import { useFiltros, useCenarios } from "@/lib/dados";
+import { useFiltros, useCenarios, useLoteAtivo } from "@/lib/dados";
 
 const NAV = [
   { to: "/", rotulo: "Visão Executiva", icone: LayoutDashboard },
@@ -32,7 +33,8 @@ const NAV = [
   { to: "/receitas", rotulo: "Receitas Projetadas", icone: TrendingUp },
   { to: "/pagamentos", rotulo: "Pagamentos", icone: Receipt },
   { to: "/dividas", rotulo: "Dívidas e Operações", icone: Banknote },
-  { to: "/importacoes", rotulo: "Importações", icone: Upload },
+  { to: "/atualizacao-semanal", rotulo: "Atualização Semanal", icone: Upload },
+  { to: "/importacoes", rotulo: "Importações", icone: FileUp },
   { to: "/conciliacao", rotulo: "Conciliação e Pendências", icone: ShieldCheck },
   { to: "/cenarios", rotulo: "Cenários", icone: GitCompare },
   { to: "/versoes", rotulo: "Histórico de Versões", icone: History },
@@ -48,6 +50,7 @@ const PERFIL_LABEL: Record<string, string> = {
 export function AppLayout({ children }: { children: ReactNode }) {
   const [recolhida, setRecolhida] = useState(false);
   const { nome, perfil, sair } = useAuth();
+  const lote = useLoteAtivo().data;
   const { filtros } = useFiltros();
   const { data: cenarios } = useCenarios();
   const rota = useRouterState({ select: (s) => s.location.pathname });
@@ -134,9 +137,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="border-warning text-warning">
-                Dados de demonstração
-              </Badge>
+              {lote ? (
+                <Badge variant="outline" className="border-success text-success">
+                  Versão {lote.numero} · base {dataBR(lote.data_base)}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="border-warning text-warning">
+                  Dados de demonstração
+                </Badge>
+              )}
               <div className="text-right">
                 <p className="text-sm font-medium">{nome || "Usuário"}</p>
                 <p className="text-xs text-muted-foreground">
