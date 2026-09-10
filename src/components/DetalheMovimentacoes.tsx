@@ -102,6 +102,13 @@ export function DetalheMovimentacoes({
               ))}
             </tbody>
           </table>
+          {movimentacoes.length > visiveis && (
+            <div className="border-t p-3 text-center">
+              <Button variant="outline" size="sm" onClick={() => setVisiveis((v) => v + 400)}>
+                Carregar mais ({movimentacoes.length - visiveis} restantes)
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
