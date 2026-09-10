@@ -26,6 +26,7 @@ import { brl, dataBR, inicioSemana, iso, pct } from "@/lib/format";
 import { useFluxo } from "@/lib/dados";
 import type { Movimentacao } from "@/lib/fluxo";
 import { CATEGORIAS_AMORTIZACAO } from "@/lib/constants";
+import { tipoChave } from "@/lib/bancos";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -54,8 +55,10 @@ function VisaoExecutiva() {
   const { fluxo, cenario, disponibilidades, movimentacoes, empresas, carregando } = useFluxo();
   const [detalhe, setDetalhe] = useState<{ titulo: string; movs: Movimentacao[] } | null>(null);
 
-  const contas = disponibilidades.filter((d) => d.tipo === "conta_corrente");
-  const aplicacoes = disponibilidades.filter((d) => d.tipo === "aplicacao");
+  const contas = disponibilidades.filter((d) =>
+    ["conta_corrente", "caixa", "poupanca"].includes(tipoChave(d.tipo)),
+  );
+  const aplicacoes = disponibilidades.filter((d) => tipoChave(d.tipo) === "aplicacao");
   const totalContas = contas.reduce((a, d) => a + Number(d.saldo), 0);
   const totalAplicacoes = aplicacoes.reduce((a, d) => a + Number(d.saldo), 0);
   const liquidezImediata = disponibilidades
