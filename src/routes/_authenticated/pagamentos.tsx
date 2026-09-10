@@ -126,6 +126,13 @@ function Pagamentos() {
               ))}
             </tbody>
           </table>
+          {saidas.length > visiveis && (
+            <div className="border-t p-3 text-center">
+              <Button variant="outline" size="sm" onClick={() => setVisiveis((v) => v + 400)}>
+                Carregar mais ({saidas.length - visiveis} restantes)
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 

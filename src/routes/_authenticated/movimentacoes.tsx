@@ -273,6 +273,13 @@ function Movimentacoes() {
               ))}
             </tbody>
           </table>
+          {lista.length > visiveis && (
+            <div className="border-t p-3 text-center">
+              <Button variant="outline" size="sm" onClick={() => setVisiveis((v) => v + 500)}>
+                Carregar mais ({lista.length - visiveis} restantes)
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
