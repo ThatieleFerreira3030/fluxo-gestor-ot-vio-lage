@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Download } from "lucide-react";
 import { FiltrosBar } from "@/components/FiltrosBar";
@@ -7,7 +6,6 @@ import { Kpi } from "@/components/Kpi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useFluxo } from "@/lib/dados";
 import { brl, dataBR, num } from "@/lib/format";
 import { STATUS_LABEL } from "@/lib/constants";
