@@ -90,12 +90,12 @@ function Disponibilidades() {
   });
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
-  const quotas = disponibilidades.filter((d) => d.tipo === "quotas");
-  const semQuotas = disponibilidades.filter((d) => d.tipo !== "quotas");
+  const quotas = disponibilidades.filter((d) => tipoChave(d.tipo) === "quotas");
+  const semQuotas = disponibilidades.filter((d) => tipoChave(d.tipo) !== "quotas");
   const contas = disponibilidades.filter((d) =>
-    ["conta_corrente", "caixa", "poupanca"].includes(d.tipo),
+    ["conta_corrente", "caixa", "poupanca"].includes(tipoChave(d.tipo)),
   );
-  const aplicacoes = disponibilidades.filter((d) => d.tipo === "aplicacao");
+  const aplicacoes = disponibilidades.filter((d) => tipoChave(d.tipo) === "aplicacao");
   const soma = (l: typeof disponibilidades) => l.reduce((a, d) => a + Number(d.saldo), 0);
 
   const porBanco = Object.entries(
