@@ -127,22 +127,6 @@ export function FiltrosBar() {
           <FiltroEmpresas />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Grupo de empresas</Label>
-          <Select value={filtros.grupo} onValueChange={(v) => setFiltros({ grupo: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os grupos</SelectItem>
-              {grupos.map((g) => (
-                <SelectItem key={g} value={g}>
-                  {g}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Cenário</Label>
           <Select
             value={filtros.cenarioId || (cenarios?.find((c) => c.oficial)?.id ?? "")}
