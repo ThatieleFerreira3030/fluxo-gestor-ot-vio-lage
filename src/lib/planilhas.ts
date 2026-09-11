@@ -715,9 +715,9 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
     }
     const juros = numero(r[iJuros]) ?? 0;
     const amortizacao = numero(r[iAmort]) ?? 0;
-    // Alguns cronogramas mantêm em "Pagamento total" um cache antigo da fórmula.
-    // Juros/remuneração + amortização são as parcelas efetivamente apresentadas na aba.
-    const total = juros + amortizacao;
+    // O valor oficial da parcela é exatamente o "Pagamento total" calculado na planilha.
+    // Juros e amortização permanecem preservados separadamente para conferência.
+    const total = totalPlanilha;
     const chave = `${txt(r[iId])}|${data}|${txt(r[iEmpresa])}|${txt(r[iCredor])}`;
     if (vistos.has(chave)) {
       ignorados++;
