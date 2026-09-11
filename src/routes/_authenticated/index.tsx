@@ -69,6 +69,31 @@ function VisaoExecutiva() {
     .reduce((a, m) => a + Number(m.valor_liquido), 0);
 
   const saldoMinimo = cenario?.saldo_minimo ?? 0;
+  const inicioPeriodo = fluxo.semanas[0]?.inicio;
+  const fimPeriodo = fluxo.semanas[fluxo.semanas.length - 1]?.fim;
+  const movimentacoesNoHorizonte = useMemo(
+    () =>
+      movimentacoes.filter((m) => {
+        if (!inicioPeriodo || !fimPeriodo) return false;
+        const data = new Date(`${m.data_prevista}T12:00:00`);
+        return data >= inicioPeriodo && data <= fimPeriodo;
+      }),
+    [movimentacoes, inicioPeriodo, fimPeriodo],
+  );
+  const instituicoesAmortizacao = useMemo(
+    () =>
+      new Set(
+        movimentacoesNoHorizonte
+          .filter(
+            (m) =>
+              m.subcategoria === "Amortização" ||
+              (CATEGORIAS_AMORTIZACAO as readonly string[]).includes(m.categoria),
+          )
+          .map((m) => m.contraparte)
+          .filter((nome): nome is string => Boolean(nome)),
+      ).size,
+    [movimentacoesNoHorizonte],
+  );
 
   const dadosSemanais = fluxo.semanas.map((s, i) => ({
     semana: s.rotulo,
@@ -87,11 +112,11 @@ function VisaoExecutiva() {
 
   const maioresCompromissos = useMemo(
     () =>
-      [...movimentacoes]
+      [...movimentacoesNoHorizonte]
         .filter((m) => m.natureza === "saida")
         .sort((a, b) => Number(b.valor_liquido) - Number(a.valor_liquido))
         .slice(0, 8),
-    [movimentacoes],
+    [movimentacoesNoHorizonte],
   );
 
   const semanasAlerta = fluxo.resultados
@@ -342,7 +367,7 @@ function VisaoExecutiva() {
             {fluxo.totalSaidas > 0 ? pct(fluxo.totalAmortizacoes / fluxo.totalSaidas) : "0%"}
           </p>
           <p className="text-sm text-muted-foreground">
-            {CATEGORIAS_AMORTIZACAO.length} instituições monitoradas
+            {instituicoesAmortizacao} instituições no período
           </p>
         </Card>
       </div>
