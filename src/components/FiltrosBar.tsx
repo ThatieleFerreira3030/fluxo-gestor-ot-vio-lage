@@ -144,22 +144,6 @@ export function FiltrosBar() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Status da informação</Label>
-          <Select value={filtros.status} onValueChange={(v) => setFiltros({ status: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              {Object.entries(STATUS_LABEL).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
       {empresasSelecionadas.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
