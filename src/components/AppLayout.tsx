@@ -163,7 +163,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="min-w-0 flex-1 px-6 py-6">{children}</main>
+        <main className="min-w-0 flex-1 px-6 py-6">
+          {bloqueado ? (
+            <div className="mx-auto mt-16 max-w-md rounded-lg border bg-card p-6 text-center">
+              <p className="text-base font-semibold">Acesso restrito</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Esta área está disponível apenas para administradores.
+              </p>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );
