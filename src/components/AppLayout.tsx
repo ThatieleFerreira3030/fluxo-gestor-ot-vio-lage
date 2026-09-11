@@ -138,7 +138,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </h1>
               <p className="text-xs text-muted-foreground">
                 Data-base {dataBR(filtros.dataBase)} · Horizonte {filtros.horizonte} semanas · Cenário{" "}
-                {cenario?.nome ?? "Base"} · Atualizado em {dataHoraBR(new Date())}
+                {cenario?.nome ?? "Base"}
+                {lote?.publicado_em ? ` · Atualizado em ${dataHoraBR(lote.publicado_em)}` : ""}
               </p>
             </div>
             <div className="flex items-center gap-3">

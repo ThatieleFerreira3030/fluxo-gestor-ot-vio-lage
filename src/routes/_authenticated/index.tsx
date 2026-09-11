@@ -102,12 +102,25 @@ function VisaoExecutiva() {
     "Saldo final": Math.round(fluxo.resultados[i]?.saldoFinal ?? 0),
   }));
 
-  const composicao = (grupo: "entradas" | "pagamentos") =>
-    fluxo.linhas
-      .filter((l) => l.grupo === grupo)
-      .map((l) => ({ name: l.categoria, value: Math.round(l.total) }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
+  const composicaoReceitas = useMemo(
+    () =>
+      fluxo.linhas
+        .filter((l) => l.grupo === "entradas" && Number.isFinite(l.total) && l.total > 0)
+        .map((l) => ({ name: l.categoria, value: Math.round(l.total) }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 8),
+    [fluxo.linhas],
+  );
+
+  const composicaoPagamentos = useMemo(
+    () =>
+      fluxo.linhas
+        .filter((l) => l.grupo === "pagamentos" && Number.isFinite(l.total) && l.total > 0)
+        .map((l) => ({ name: l.categoria, value: Math.round(l.total) }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 8),
+    [fluxo.linhas],
+  );
 
   const maioresCompromissos = useMemo(
     () =>
@@ -270,24 +283,30 @@ function VisaoExecutiva() {
             <CardTitle className="text-base">Composição das receitas</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={composicao("entradas")}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={50}
-                  outerRadius={95}
-                  onClick={(d: { name?: string }) => d?.name && abrirCategoria(d.name)}
-                >
-                  {composicao("entradas").map((_, i) => (
-                    <Cell key={i} fill={CORES[i % CORES.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => brl(Number(v))} />
-                <Legend wrapperStyle={{ fontSize: 10 }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {composicaoReceitas.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={composicaoReceitas}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={95}
+                    onClick={(d: { name?: string }) => d?.name && abrirCategoria(d.name)}
+                  >
+                    {composicaoReceitas.map((item, i) => (
+                      <Cell key={item.name} fill={CORES[i % CORES.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => brl(Number(v))} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Sem receitas no período selecionado.
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -296,24 +315,30 @@ function VisaoExecutiva() {
             <CardTitle className="text-base">Composição dos pagamentos</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={composicao("pagamentos")}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={50}
-                  outerRadius={95}
-                  onClick={(d: { name?: string }) => d?.name && abrirCategoria(d.name)}
-                >
-                  {composicao("pagamentos").map((_, i) => (
-                    <Cell key={i} fill={CORES[(i + 2) % CORES.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => brl(Number(v))} />
-                <Legend wrapperStyle={{ fontSize: 10 }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {composicaoPagamentos.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={composicaoPagamentos}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={95}
+                    onClick={(d: { name?: string }) => d?.name && abrirCategoria(d.name)}
+                  >
+                    {composicaoPagamentos.map((item, i) => (
+                      <Cell key={item.name} fill={CORES[(i + 2) % CORES.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => brl(Number(v))} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Sem pagamentos no período selecionado.
+              </div>
+            )}
           </CardContent>
         </Card>
 
