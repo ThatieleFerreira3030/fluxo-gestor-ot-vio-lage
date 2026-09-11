@@ -165,7 +165,7 @@ function Dividas() {
               ))}
               {!lista.length && (
                 <tr>
-                  <td colSpan={9} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
                     Nenhum contrato cadastrado.
                   </td>
                 </tr>
