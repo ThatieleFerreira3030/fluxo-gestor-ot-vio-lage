@@ -372,12 +372,6 @@ function VisaoExecutiva() {
         </Card>
       </div>
 
-      <p className="mt-6 text-xs text-muted-foreground">
-        <Badge variant="outline" className="mr-2 border-warning text-warning">
-          Demonstração
-        </Badge>
-        Base carregada com dados fictícios para conferência das telas.
-      </p>
 
       <DetalheMovimentacoes
         aberto={!!detalhe}
