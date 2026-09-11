@@ -57,6 +57,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { data: cenarios } = useCenarios();
   const rota = useRouterState({ select: (s) => s.location.pathname });
   const cenario = cenarios?.find((c) => c.id === filtros.cenarioId) ?? cenarios?.find((c) => c.oficial);
+  const ehAdmin = perfil === "admin";
+  const rotaRestrita = ROTAS_ADMIN.some((r) => rota.startsWith(r));
+  const bloqueado = !ehAdmin && rotaRestrita;
 
   return (
     <div className="flex min-h-screen bg-background">
