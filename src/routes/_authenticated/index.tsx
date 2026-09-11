@@ -21,7 +21,6 @@ import { FiltrosBar } from "@/components/FiltrosBar";
 import { Kpi } from "@/components/Kpi";
 import { DetalheMovimentacoes } from "@/components/DetalheMovimentacoes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { brl, dataBR, inicioSemana, iso, pct } from "@/lib/format";
 import { useFluxo } from "@/lib/dados";
 import type { Movimentacao } from "@/lib/fluxo";
