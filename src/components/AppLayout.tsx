@@ -173,7 +173,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </p>
             </div>
           ) : (
-            children
+            <ErroConteudo
+              chave={`${rota}|${filtros.dataBase}|${filtros.horizonte}|${filtros.grupo}|${filtros.cenarioId}|${filtros.status}|${filtros.empresaIds.join(",")}`}
+            >
+              {children}
+            </ErroConteudo>
           )}
         </main>
       </div>
