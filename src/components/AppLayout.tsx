@@ -26,20 +26,22 @@ import { dataBR, dataHoraBR } from "@/lib/format";
 import { useFiltros, useCenarios, useLoteAtivo } from "@/lib/dados";
 
 const NAV = [
-  { to: "/", rotulo: "Visão Executiva", icone: LayoutDashboard },
-  { to: "/fluxo-semanal", rotulo: "Fluxo Semanal", icone: CalendarRange },
-  { to: "/movimentacoes", rotulo: "Movimentações", icone: ListOrdered },
-  { to: "/disponibilidades", rotulo: "Disponibilidades", icone: Landmark },
-  { to: "/receitas", rotulo: "Receitas Projetadas", icone: TrendingUp },
-  { to: "/pagamentos", rotulo: "Pagamentos", icone: Receipt },
-  { to: "/dividas", rotulo: "Dívidas e Operações", icone: Banknote },
-  { to: "/atualizacao-semanal", rotulo: "Atualização Semanal", icone: Upload },
-  { to: "/importacoes", rotulo: "Importações", icone: FileUp },
-  { to: "/conciliacao", rotulo: "Conciliação e Pendências", icone: ShieldCheck },
-  { to: "/cenarios", rotulo: "Cenários", icone: GitCompare },
-  { to: "/versoes", rotulo: "Histórico de Versões", icone: History },
-  { to: "/cadastros", rotulo: "Cadastros e Regras", icone: Settings2 },
+  { to: "/", rotulo: "Visão Executiva", icone: LayoutDashboard, somenteAdmin: false },
+  { to: "/fluxo-semanal", rotulo: "Fluxo Semanal", icone: CalendarRange, somenteAdmin: false },
+  { to: "/movimentacoes", rotulo: "Movimentações", icone: ListOrdered, somenteAdmin: false },
+  { to: "/disponibilidades", rotulo: "Disponibilidades", icone: Landmark, somenteAdmin: false },
+  { to: "/receitas", rotulo: "Receitas Projetadas", icone: TrendingUp, somenteAdmin: false },
+  { to: "/pagamentos", rotulo: "Pagamentos", icone: Receipt, somenteAdmin: false },
+  { to: "/dividas", rotulo: "Dívidas e Operações", icone: Banknote, somenteAdmin: false },
+  { to: "/atualizacao-semanal", rotulo: "Atualização Semanal", icone: Upload, somenteAdmin: true },
+  { to: "/importacoes", rotulo: "Importações", icone: FileUp, somenteAdmin: true },
+  { to: "/conciliacao", rotulo: "Conciliação e Pendências", icone: ShieldCheck, somenteAdmin: true },
+  { to: "/cenarios", rotulo: "Cenários", icone: GitCompare, somenteAdmin: true },
+  { to: "/versoes", rotulo: "Histórico de Versões", icone: History, somenteAdmin: true },
+  { to: "/cadastros", rotulo: "Cadastros e Regras", icone: Settings2, somenteAdmin: true },
 ] as const;
+
+const ROTAS_ADMIN = NAV.filter((i) => i.somenteAdmin).map((i) => i.to) as readonly string[];
 
 const PERFIL_LABEL: Record<string, string> = {
   admin: "Administrador",
