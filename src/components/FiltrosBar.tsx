@@ -20,7 +20,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { HORIZONTES, STATUS_LABEL } from "@/lib/constants";
+import { HORIZONTES } from "@/lib/constants";
 import { useCenarios, useEmpresas, useFiltros } from "@/lib/dados";
 import { addDias, dataBR, toDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -88,13 +88,12 @@ export function FiltrosBar() {
   const { filtros, setFiltros } = useFiltros();
   const { data: empresas } = useEmpresas();
   const { data: cenarios } = useCenarios();
-  const grupos = [...new Set((empresas ?? []).map((e) => e.grupo).filter(Boolean))] as string[];
   const fim = addDias(toDate(filtros.dataBase), filtros.horizonte * 7 - 1);
   const empresasSelecionadas = (empresas ?? []).filter((e) => filtros.empresaIds.includes(e.id));
 
   return (
     <Card className="no-print mb-6 gap-0 p-4 shadow-panel">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Data-base</Label>
           <Input
