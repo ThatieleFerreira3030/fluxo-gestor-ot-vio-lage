@@ -26,20 +26,22 @@ import { dataBR, dataHoraBR } from "@/lib/format";
 import { useFiltros, useCenarios, useLoteAtivo } from "@/lib/dados";
 
 const NAV = [
-  { to: "/", rotulo: "Visão Executiva", icone: LayoutDashboard },
-  { to: "/fluxo-semanal", rotulo: "Fluxo Semanal", icone: CalendarRange },
-  { to: "/movimentacoes", rotulo: "Movimentações", icone: ListOrdered },
-  { to: "/disponibilidades", rotulo: "Disponibilidades", icone: Landmark },
-  { to: "/receitas", rotulo: "Receitas Projetadas", icone: TrendingUp },
-  { to: "/pagamentos", rotulo: "Pagamentos", icone: Receipt },
-  { to: "/dividas", rotulo: "Dívidas e Operações", icone: Banknote },
-  { to: "/atualizacao-semanal", rotulo: "Atualização Semanal", icone: Upload },
-  { to: "/importacoes", rotulo: "Importações", icone: FileUp },
-  { to: "/conciliacao", rotulo: "Conciliação e Pendências", icone: ShieldCheck },
-  { to: "/cenarios", rotulo: "Cenários", icone: GitCompare },
-  { to: "/versoes", rotulo: "Histórico de Versões", icone: History },
-  { to: "/cadastros", rotulo: "Cadastros e Regras", icone: Settings2 },
+  { to: "/", rotulo: "Visão Executiva", icone: LayoutDashboard, somenteAdmin: false },
+  { to: "/fluxo-semanal", rotulo: "Fluxo Semanal", icone: CalendarRange, somenteAdmin: false },
+  { to: "/movimentacoes", rotulo: "Movimentações", icone: ListOrdered, somenteAdmin: false },
+  { to: "/disponibilidades", rotulo: "Disponibilidades", icone: Landmark, somenteAdmin: false },
+  { to: "/receitas", rotulo: "Receitas Projetadas", icone: TrendingUp, somenteAdmin: false },
+  { to: "/pagamentos", rotulo: "Pagamentos", icone: Receipt, somenteAdmin: false },
+  { to: "/dividas", rotulo: "Dívidas e Operações", icone: Banknote, somenteAdmin: false },
+  { to: "/atualizacao-semanal", rotulo: "Atualização Semanal", icone: Upload, somenteAdmin: true },
+  { to: "/importacoes", rotulo: "Importações", icone: FileUp, somenteAdmin: true },
+  { to: "/conciliacao", rotulo: "Conciliação e Pendências", icone: ShieldCheck, somenteAdmin: true },
+  { to: "/cenarios", rotulo: "Cenários", icone: GitCompare, somenteAdmin: true },
+  { to: "/versoes", rotulo: "Histórico de Versões", icone: History, somenteAdmin: true },
+  { to: "/cadastros", rotulo: "Cadastros e Regras", icone: Settings2, somenteAdmin: true },
 ] as const;
+
+const ROTAS_ADMIN = NAV.filter((i) => i.somenteAdmin).map((i) => i.to) as readonly string[];
 
 const PERFIL_LABEL: Record<string, string> = {
   admin: "Administrador",
@@ -55,6 +57,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { data: cenarios } = useCenarios();
   const rota = useRouterState({ select: (s) => s.location.pathname });
   const cenario = cenarios?.find((c) => c.id === filtros.cenarioId) ?? cenarios?.find((c) => c.oficial);
+  const ehAdmin = perfil === "admin";
+  const rotaRestrita = ROTAS_ADMIN.some((r) => rota.startsWith(r));
+  const bloqueado = !ehAdmin && rotaRestrita;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -77,7 +82,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
-          {NAV.map((item) => {
+          {NAV.filter((item) => ehAdmin || !item.somenteAdmin).map((item) => {
             const ativo = item.to === "/" ? rota === "/" : rota.startsWith(item.to);
             const Icone = item.icone;
             return (
@@ -158,7 +163,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="min-w-0 flex-1 px-6 py-6">{children}</main>
+        <main className="min-w-0 flex-1 px-6 py-6">
+          {bloqueado ? (
+            <div className="mx-auto mt-16 max-w-md rounded-lg border bg-card p-6 text-center">
+              <p className="text-base font-semibold">Acesso restrito</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Esta área está disponível apenas para administradores.
+              </p>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );
