@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { dataBR, dataHoraBR } from "@/lib/format";
 import { useFiltros, useCenarios, useLoteAtivo } from "@/lib/dados";
+import { ErroConteudo } from "@/components/ErroConteudo";
 
 const NAV = [
   { to: "/", rotulo: "Visão Executiva", icone: LayoutDashboard, somenteAdmin: false },
