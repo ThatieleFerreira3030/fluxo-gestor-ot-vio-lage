@@ -92,7 +92,7 @@ function Dividas() {
                 Instituição: c.instituicao,
                 Operação: c.tipo_operacao,
                 Contrato: c.numero_contrato,
-                "Valor original": Number(c.valor_original),
+                
                 "Saldo devedor": Number(c.saldo_devedor),
                 Indexador: c.indexador,
                 Taxa: c.taxa,
@@ -139,7 +139,7 @@ function Dividas() {
                 <th className="p-2 font-medium">Empresa</th>
                 <th className="p-2 font-medium">Instituição</th>
                 <th className="p-2 font-medium">Operação</th>
-                <th className="p-2 text-right font-medium">Valor original</th>
+                
                 <th className="p-2 text-right font-medium">Saldo devedor</th>
                 <th className="p-2 font-medium">Indexador</th>
                 <th className="p-2 text-right font-medium">Taxa</th>
@@ -153,7 +153,7 @@ function Dividas() {
                   <td className="p-2">{nomeEmpresa(c.empresa_id)}</td>
                   <td className="p-2 font-medium">{c.instituicao}</td>
                   <td className="p-2 text-xs text-muted-foreground">{c.tipo_operacao ?? "—"}</td>
-                  <td className="num p-2 text-right">{brl(Number(c.valor_original), true)}</td>
+                  
                   <td className="num p-2 text-right text-destructive">{brl(Number(c.saldo_devedor), true)}</td>
                   <td className="p-2">{c.indexador ?? "—"}</td>
                   <td className="num p-2 text-right">{c.taxa ? `${num(c.taxa, 2)}%` : "—"}</td>
