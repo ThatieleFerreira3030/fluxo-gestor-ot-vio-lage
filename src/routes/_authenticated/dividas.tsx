@@ -66,7 +66,16 @@ function Dividas() {
     .map(([instituicao, valor]) => ({ instituicao, Saldo: Math.round(valor) }))
     .sort((a, b) => b.Saldo - a.Saldo);
 
-  const juros = (parcelas.data ?? []).reduce((a, p) => a + Number(p.juros), 0);
+  // Juros previstos apenas dentro do horizonte do fluxo exibido.
+  const inicioPeriodo = fluxo.semanas[0]?.inicio;
+  const fimPeriodo = fluxo.semanas[fluxo.semanas.length - 1]?.fim;
+  const juros = (parcelas.data ?? [])
+    .filter((p) => {
+      if (!inicioPeriodo || !fimPeriodo) return true;
+      const d = new Date(`${p.vencimento}T12:00:00`);
+      return d >= inicioPeriodo && d <= fimPeriodo;
+    })
+    .reduce((a, p) => a + Number(p.juros), 0);
 
   return (
     <div>
