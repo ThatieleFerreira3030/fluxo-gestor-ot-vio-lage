@@ -21,7 +21,6 @@ import { FiltrosBar } from "@/components/FiltrosBar";
 import { Kpi } from "@/components/Kpi";
 import { DetalheMovimentacoes } from "@/components/DetalheMovimentacoes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { brl, dataBR, inicioSemana, iso, pct } from "@/lib/format";
 import { useFluxo } from "@/lib/dados";
 import type { Movimentacao } from "@/lib/fluxo";
@@ -372,12 +371,6 @@ function VisaoExecutiva() {
         </Card>
       </div>
 
-      <p className="mt-6 text-xs text-muted-foreground">
-        <Badge variant="outline" className="mr-2 border-warning text-warning">
-          Demonstração
-        </Badge>
-        Base carregada com dados fictícios para conferência das telas.
-      </p>
 
       <DetalheMovimentacoes
         aberto={!!detalhe}
