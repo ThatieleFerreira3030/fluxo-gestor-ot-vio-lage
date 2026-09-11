@@ -706,13 +706,18 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
       ignorados++;
       return;
     }
-    const total = numero(r[iTotal]);
-    if (total === null) {
+    const totalPlanilha = numero(r[iTotal]);
+    if (totalPlanilha === null) {
       erros.push(
         `Linha com vencimento ${data} (${txt(r[iId])}) sem valor numérico em "Pagamento total".`,
       );
       return;
     }
+    const juros = numero(r[iJuros]) ?? 0;
+    const amortizacao = numero(r[iAmort]) ?? 0;
+    // Alguns cronogramas mantêm em "Pagamento total" um cache antigo da fórmula.
+    // Juros/remuneração + amortização são as parcelas efetivamente apresentadas na aba.
+    const total = juros + amortizacao;
     const chave = `${txt(r[iId])}|${data}|${txt(r[iEmpresa])}|${txt(r[iCredor])}`;
     if (vistos.has(chave)) {
       ignorados++;
@@ -739,8 +744,8 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
         Credor: txt(r[iCredor]),
         Evento: txt(r[iEvento]),
         "Saldo inicial": numero(r[iSaldoIni]),
-        "Juros / remuneração": numero(r[iJuros]),
-        Amortização: numero(r[iAmort]),
+        "Juros / remuneração": juros,
+        Amortização: amortizacao,
         "Pagamento total": total,
         "Saldo final": numero(r[iSaldoFim]),
         Fonte: txt(r[iFonte]),
