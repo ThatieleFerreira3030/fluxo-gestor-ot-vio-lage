@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularFluxo, montarSemanas, type Cenario, type Movimentacao } from "./fluxo";
-import { addDias, inicioSemana, iso, toDate } from "./format";
+import { inicioSemana, iso, toDate } from "./format";
 
 /** Quotas não compõem o saldo inicial do fluxo. */
 const ehQuota = (tipo: string) =>
