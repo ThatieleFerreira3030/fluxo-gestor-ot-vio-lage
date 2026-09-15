@@ -60,9 +60,6 @@ function VisaoExecutiva() {
   const aplicacoes = disponibilidades.filter((d) => tipoChave(d.tipo) === "aplicacao");
   const totalContas = contas.reduce((a, d) => a + Number(d.saldo), 0);
   const totalAplicacoes = aplicacoes.reduce((a, d) => a + Number(d.saldo), 0);
-  const liquidezImediata = disponibilidades
-    .filter((d) => d.liquidez === "imediata")
-    .reduce((a, d) => a + Number(d.saldo), 0);
   const saldoMinimo = cenario?.saldo_minimo ?? 0;
   const inicioPeriodo = fluxo.semanas[0]?.inicio;
   const fimPeriodo = fluxo.semanas[fluxo.semanas.length - 1]?.fim;
@@ -191,12 +188,6 @@ function VisaoExecutiva() {
           detalhe={fluxo.semanaMenorSaldo ? dataBR(fluxo.semanaMenorSaldo.inicio) : ""}
           onClick={() => abrirSemana(fluxo.semanaMenorSaldo?.indice ?? 0)}
         />
-        <Kpi
-          titulo="Necessidade máxima de caixa"
-          valor={brl(fluxo.necessidadeMaxima, true)}
-          tom={fluxo.necessidadeMaxima > 0 ? "negativo" : "positivo"}
-        />
-        <Kpi titulo="Liquidez imediata" valor={brl(liquidezImediata, true)} detalhe="Disponível para resgate" />
       </div>
 
       {semanasAlerta.length > 0 && (
