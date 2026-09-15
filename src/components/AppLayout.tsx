@@ -12,6 +12,7 @@ import {
   FileUp,
   ShieldCheck,
   GitCompare,
+  Scale,
   History,
   Settings2,
   ChevronLeft,
@@ -38,6 +39,7 @@ const NAV = [
   { to: "/importacoes", rotulo: "Importações", icone: FileUp, somenteAdmin: true },
   { to: "/conciliacao", rotulo: "Conciliação e Pendências", icone: ShieldCheck, somenteAdmin: true },
   { to: "/cenarios", rotulo: "Cenários", icone: GitCompare, somenteAdmin: true },
+  { to: "/projetado-realizado", rotulo: "Projetado x Realizado", icone: Scale, somenteAdmin: true },
   { to: "/versoes", rotulo: "Histórico de Versões", icone: History, somenteAdmin: true },
   { to: "/cadastros", rotulo: "Cadastros e Regras", icone: Settings2, somenteAdmin: true },
 ] as const;
