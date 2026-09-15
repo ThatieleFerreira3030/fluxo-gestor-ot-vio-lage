@@ -272,7 +272,11 @@ type CfgAba = {
   natureza: "entrada" | "saida";
   colValor: string[];
   colData: string[];
-  extras?: string[];
+  colCategoria?: string[];
+  colDescricao?: string[];
+  colContraparte?: string[];
+  colEmpresa?: string[];
+  colDocumento?: string[];
 };
 
 const lerAbaSimples = (
@@ -317,17 +321,24 @@ const lerAbaSimples = (
       if (k) detalhe[k] = r[i] instanceof Date ? dataCelula(r[i]) : (r[i] ?? null);
     });
     const situacao = txt(r[col("Situação", "Situacao")] ?? "");
-    const destino = txt(r[col("Destino", "Mercado")] ?? "");
+    const contraparte = txt(
+      r[col(...(cfg.colContraparte ?? ["Destino", "Mercado"]))] ?? "",
+    );
+    const descricao =
+      txt(r[col(...(cfg.colDescricao ?? []))] ?? "") || cfg.categoria;
+    const empresa = txt(r[col(...(cfg.colEmpresa ?? []))] ?? "") || null;
+    const documento = txt(r[col(...(cfg.colDocumento ?? []))] ?? "");
     movimentos.push({
-      chave: `${nome}|${idx}|${data}|${valor}|${destino}`,
+      chave: `${nome}|${idx}|${data}|${valor}|${contraparte}|${documento}`,
       aba: nome,
       natureza: cfg.natureza,
       categoria: cfg.categoria,
-      subcategoria: txt(r[col("Categoria")] ?? "") || null,
-      descricao: cfg.categoria,
-      contraparte: destino,
-      documento: "",
-      empresa: null,
+      subcategoria:
+        txt(r[col(...(cfg.colCategoria ?? ["Categoria"]))] ?? "") || null,
+      descricao,
+      contraparte,
+      documento,
+      empresa,
       data,
       valor: Math.abs(valor),
       status: statusDaSituacao(situacao),
@@ -404,6 +415,18 @@ const lerEntradas = (wb: XLSX.WorkBook, arquivo: string, dataBase: string | null
       natureza: "entrada",
       colValor: ["Faturamento"],
       colData: ["Data de recebimento"],
+    },
+    {
+      aba: "Outras entradas",
+      categoria: "Outras entradas",
+      natureza: "entrada",
+      colValor: ["Valor", "Faturamento", "Recebimento", "Valor líquido"],
+      colData: ["Data de recebimento", "Data prevista", "Vencimento", "Data"],
+      colCategoria: ["Categoria", "Tipo"],
+      colDescricao: ["Descrição", "Descricao", "Histórico", "Historico"],
+      colContraparte: ["Cliente", "Contraparte", "Origem", "Fornecedor"],
+      colEmpresa: ["Empresa", "Coligada"],
+      colDocumento: ["Documento", "Número documento", "Numero documento"],
     },
   ];
 
