@@ -23,6 +23,7 @@ import { Route as AuthenticatedImportacoesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedModoDiretoriaRouteImport } from './routes/_authenticated/modo-diretoria'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
 import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
+import { Route as AuthenticatedProjetadoRealizadoRouteImport } from './routes/_authenticated/projetado-realizado'
 import { Route as AuthenticatedReceitasRouteImport } from './routes/_authenticated/receitas'
 import { Route as AuthenticatedVersoesRouteImport } from './routes/_authenticated/versoes'
 
@@ -102,6 +103,12 @@ const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
   path: '/pagamentos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProjetadoRealizadoRoute =
+  AuthenticatedProjetadoRealizadoRouteImport.update({
+    id: '/projetado-realizado',
+    path: '/projetado-realizado',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedReceitasRoute = AuthenticatedReceitasRouteImport.update({
   id: '/receitas',
   path: '/receitas',
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/pagamentos': typeof AuthenticatedPagamentosRoute
+  '/projetado-realizado': typeof AuthenticatedProjetadoRealizadoRoute
   '/receitas': typeof AuthenticatedReceitasRoute
   '/versoes': typeof AuthenticatedVersoesRoute
 }
@@ -143,6 +151,7 @@ export interface FileRoutesByTo {
   '/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/pagamentos': typeof AuthenticatedPagamentosRoute
+  '/projetado-realizado': typeof AuthenticatedProjetadoRealizadoRoute
   '/receitas': typeof AuthenticatedReceitasRoute
   '/versoes': typeof AuthenticatedVersoesRoute
   '/': typeof AuthenticatedIndexRoute
@@ -162,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/modo-diretoria': typeof AuthenticatedModoDiretoriaRoute
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
+  '/_authenticated/projetado-realizado': typeof AuthenticatedProjetadoRealizadoRoute
   '/_authenticated/receitas': typeof AuthenticatedReceitasRoute
   '/_authenticated/versoes': typeof AuthenticatedVersoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/modo-diretoria'
     | '/movimentacoes'
     | '/pagamentos'
+    | '/projetado-realizado'
     | '/receitas'
     | '/versoes'
   fileRoutesByTo: FileRoutesByTo
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/modo-diretoria'
     | '/movimentacoes'
     | '/pagamentos'
+    | '/projetado-realizado'
     | '/receitas'
     | '/versoes'
     | '/'
@@ -216,6 +228,7 @@ export interface FileRouteTypes {
     | '/_authenticated/modo-diretoria'
     | '/_authenticated/movimentacoes'
     | '/_authenticated/pagamentos'
+    | '/_authenticated/projetado-realizado'
     | '/_authenticated/receitas'
     | '/_authenticated/versoes'
     | '/_authenticated/'
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/projetado-realizado': {
+      id: '/_authenticated/projetado-realizado'
+      path: '/projetado-realizado'
+      fullPath: '/projetado-realizado'
+      preLoaderRoute: typeof AuthenticatedProjetadoRealizadoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/receitas': {
       id: '/_authenticated/receitas'
       path: '/receitas'
@@ -355,6 +375,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedModoDiretoriaRoute: typeof AuthenticatedModoDiretoriaRoute
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
   AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
+  AuthenticatedProjetadoRealizadoRoute: typeof AuthenticatedProjetadoRealizadoRoute
   AuthenticatedReceitasRoute: typeof AuthenticatedReceitasRoute
   AuthenticatedVersoesRoute: typeof AuthenticatedVersoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -372,6 +393,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedModoDiretoriaRoute: AuthenticatedModoDiretoriaRoute,
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
   AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
+  AuthenticatedProjetadoRealizadoRoute: AuthenticatedProjetadoRealizadoRoute,
   AuthenticatedReceitasRoute: AuthenticatedReceitasRoute,
   AuthenticatedVersoesRoute: AuthenticatedVersoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
