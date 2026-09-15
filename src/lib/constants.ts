@@ -7,6 +7,7 @@ export const CATEGORIAS_ENTRADA = [
   "Cliente Palmeiras",
   "Látex",
   "Remuneração de avais",
+  "Outras entradas",
   "StoneX",
   "Outros recebimentos",
   "Operações de crédito",
