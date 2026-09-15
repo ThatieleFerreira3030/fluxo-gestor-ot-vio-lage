@@ -21,7 +21,7 @@ import { FiltrosBar } from "@/components/FiltrosBar";
 import { Kpi } from "@/components/Kpi";
 import { DetalheMovimentacoes } from "@/components/DetalheMovimentacoes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { brl, dataBR, inicioSemana, iso, pct } from "@/lib/format";
+import { brl, dataBR, pct, toDate } from "@/lib/format";
 import { useFluxo } from "@/lib/dados";
 import type { Movimentacao } from "@/lib/fluxo";
 import { CATEGORIAS_AMORTIZACAO } from "@/lib/constants";
@@ -51,7 +51,18 @@ export const Route = createFileRoute("/_authenticated/")({
 const CORES = ["#1f2d4a", "#2f7d55", "#b03a2e", "#c98a1e", "#3a6ea5", "#6b7f9e", "#7d5ba6", "#3e8e8e"];
 
 function VisaoExecutiva() {
-  const { fluxo, cenario, disponibilidades, movimentacoes, empresas, carregando } = useFluxo();
+  const {
+    fluxo,
+    cenario,
+    disponibilidades,
+    movimentacoes,
+    empresas,
+    carregando,
+    dataBase,
+    dataPosicao,
+    saldoDataBase,
+    saldoCertificado,
+  } = useFluxo();
   const [detalhe, setDetalhe] = useState<{ titulo: string; movs: Movimentacao[] } | null>(null);
 
   const contas = disponibilidades.filter((d) =>
@@ -133,7 +144,10 @@ function VisaoExecutiva() {
     if (!s) return;
     setDetalhe({
       titulo: `Movimentações da semana ${s.rotulo}`,
-      movs: movimentacoes.filter((m) => iso(inicioSemana(m.data_prevista)) === s.chave),
+      movs: movimentacoes.filter((m) => {
+        const data = toDate(m.data_prevista);
+        return data >= s.inicio && data <= s.fim;
+      }),
     });
   };
 
@@ -150,9 +164,26 @@ function VisaoExecutiva() {
       <FiltrosBar />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-6">
-        <Kpi titulo="Saldo disponível inicial" valor={brl(fluxo.saldoInicial, true)} detalhe="Contas + aplicações" />
-        <Kpi titulo="Contas bancárias" valor={brl(totalContas, true)} detalhe={`${contas.length} contas`} />
-        <Kpi titulo="Aplicações" valor={brl(totalAplicacoes, true)} detalhe={`${aplicacoes.length} aplicações`} />
+        <Kpi
+          titulo="Saldo na data-base"
+          valor={brl(saldoDataBase, true)}
+          detalhe={
+            saldoCertificado
+              ? `Certificado pelas disponibilidades de ${dataBR(dataPosicao)}`
+              : `Projetado até ${dataBR(dataBase)} · posição de ${dataBR(dataPosicao)}`
+          }
+          tom={saldoDataBase >= 0 ? "positivo" : "negativo"}
+        />
+        <Kpi
+          titulo="Contas bancárias"
+          valor={brl(totalContas, true)}
+          detalhe={`${contas.length} contas · posição ${dataBR(dataPosicao)}`}
+        />
+        <Kpi
+          titulo="Aplicações"
+          valor={brl(totalAplicacoes, true)}
+          detalhe={`${aplicacoes.length} aplicações · posição ${dataBR(dataPosicao)}`}
+        />
         <Kpi
           titulo="Entradas projetadas"
           valor={brl(fluxo.totalEntradas, true)}
