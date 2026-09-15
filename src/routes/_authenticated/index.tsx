@@ -62,10 +62,6 @@ function VisaoExecutiva() {
     dataPosicao,
     saldoDataBase,
     saldoCertificado,
-    inicioPeriodoDataBase,
-    fimPeriodoDataBase,
-    entradasDataBase,
-    saidasDataBase,
   } = useFluxo();
   const [detalhe, setDetalhe] = useState<{ titulo: string; movs: Movimentacao[] } | null>(null);
 
@@ -177,20 +173,6 @@ function VisaoExecutiva() {
               : `Projetado até ${dataBR(dataBase)} · posição de ${dataBR(dataPosicao)}`
           }
           tom={saldoDataBase >= 0 ? "positivo" : "negativo"}
-        />
-        <Kpi
-          titulo="Entradas até a data-base"
-          valor={brl(entradasDataBase, true)}
-          detalhe={`${dataBR(inicioPeriodoDataBase)} a ${dataBR(fimPeriodoDataBase)}`}
-          tom="positivo"
-          icone={<TrendingUp className="h-4 w-4 text-success" />}
-        />
-        <Kpi
-          titulo="Saídas até a data-base"
-          valor={brl(saidasDataBase, true)}
-          detalhe={`${dataBR(inicioPeriodoDataBase)} a ${dataBR(fimPeriodoDataBase)}`}
-          tom="negativo"
-          icone={<TrendingDown className="h-4 w-4 text-destructive" />}
         />
         <Kpi
           titulo="Contas bancárias"
