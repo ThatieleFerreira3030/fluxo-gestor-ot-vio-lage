@@ -103,6 +103,29 @@ export const dataCelula = (v: unknown): string | null => {
     return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
   }
   const s = String(v).trim();
+  const mesesPt: Record<string, number> = {
+    janeiro: 1,
+    fevereiro: 2,
+    marco: 3,
+    abril: 4,
+    maio: 5,
+    junho: 6,
+    julho: 7,
+    agosto: 8,
+    setembro: 9,
+    outubro: 10,
+    novembro: 11,
+    dezembro: 12,
+  };
+  const dataExtensa = semAcento(s).match(
+    /(?:[a-z]+-feira,?\s*)?(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})/,
+  );
+  if (dataExtensa) {
+    const [, dia, nomeMes, ano] = dataExtensa;
+    const mes = mesesPt[nomeMes ?? ""];
+    if (mes)
+      return `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0") }`;
+  }
   const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if (br) {
     const [, d, m, y] = br;
