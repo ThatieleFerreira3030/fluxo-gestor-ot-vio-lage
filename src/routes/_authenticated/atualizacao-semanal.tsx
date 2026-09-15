@@ -313,13 +313,11 @@ function AtualizacaoSemanal() {
           const registros = (pagina ?? []) as unknown as Record<string, unknown>[];
           linhasMov.push(
             ...registros.map((registro) => {
-              const {
-                id: _id,
-                created_at: _createdAt,
-                updated_at: _updatedAt,
-                lote_id: _loteAnterior,
-                ...campos
-              } = registro;
+              const campos = { ...registro };
+              delete campos.id;
+              delete campos.created_at;
+              delete campos.updated_at;
+              delete campos.lote_id;
               return { ...campos, lote_id: loteId };
             }),
           );
