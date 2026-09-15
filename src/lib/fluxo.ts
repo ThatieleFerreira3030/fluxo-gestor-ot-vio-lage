@@ -71,15 +71,20 @@ export type Fluxo = {
 };
 
 /**
- * Monta o horizonte com uma primeira semana parcial, encerrada na data-base.
- * As semanas seguintes retomam o ciclo normal de sexta a quinta.
+ * Monta a projeção a partir do dia seguinte à data-base. Quando a data-base
+ * cai antes de quinta-feira, o primeiro período é parcial até a quinta;
+ * os seguintes retomam o ciclo normal de sexta a quinta.
  */
 export const montarSemanas = (dataBase: string, horizonte: number): Semana[] => {
-  const inicioPrimeira = inicioSemana(dataBase);
-  const fimPrimeira = toDate(dataBase);
+  const base = toDate(dataBase);
+  const quintaDoCiclo = addDias(inicioSemana(base), 6);
+  const inicioAposBase = addDias(base, 1);
+  const primeiraCompleta = inicioAposBase > quintaDoCiclo;
+  const inicioPrimeira = primeiraCompleta ? inicioAposBase : inicioAposBase;
+  const fimPrimeira = primeiraCompleta ? addDias(inicioPrimeira, 6) : quintaDoCiclo;
 
   return Array.from({ length: horizonte }, (_, i) => {
-    const ini = addDias(inicioPrimeira, i * 7);
+    const ini = i === 0 ? inicioPrimeira : addDias(fimPrimeira, 1 + (i - 1) * 7);
     const fim = i === 0 ? fimPrimeira : addDias(ini, 6);
     return {
       indice: i,
