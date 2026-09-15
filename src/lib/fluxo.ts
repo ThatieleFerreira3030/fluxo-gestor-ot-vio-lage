@@ -108,7 +108,6 @@ export const calcularFluxo = (
   cenario?: Cenario | null,
 ): Fluxo => {
   const n = semanas.length;
-  const idxPorChave = new Map(semanas.map((s) => [s.chave, s.indice]));
   const zeros = () => Array.from({ length: n }, () => 0);
 
   const mapa = new Map<string, LinhaFluxo>();
@@ -127,9 +126,9 @@ export const calcularFluxo = (
 
   for (const m of movimentacoes) {
     if (m.status === "cancelado") continue;
-    const chave = iso(inicioSemana(m.data_prevista));
-    const i = idxPorChave.get(chave);
-    if (i === undefined) continue;
+    const data = toDate(m.data_prevista);
+    const i = semanas.findIndex((s) => data >= s.inicio && data <= s.fim);
+    if (i < 0) continue;
     const grupo = grupoDaCategoria(m);
     const fator = grupo === "entradas" ? fr : fd;
     const valor = Number(m.valor_liquido || m.valor_original || 0) * fator;
