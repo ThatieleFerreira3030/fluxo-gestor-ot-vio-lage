@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/command";
 import { HORIZONTES } from "@/lib/constants";
 import { useCenarios, useEmpresas, useFiltros } from "@/lib/dados";
-import { dataBR } from "@/lib/format";
+import { dataBR, inicioSemana } from "@/lib/format";
 import { montarSemanas } from "@/lib/fluxo";
 import { cn } from "@/lib/utils";
 
@@ -164,8 +164,9 @@ export function FiltrosBar() {
         </div>
       )}
       <p className="mt-3 text-xs text-muted-foreground">
-        Primeiro período parcial: {dataBR(primeiraSemana?.inicio)} a {dataBR(primeiraSemana?.fim)}
-        {" · "}semanas seguintes de sexta a quinta{" · "}horizonte até {dataBR(fim)}
+        Fechamento da data-base: {dataBR(inicioSemana(filtros.dataBase))} a{" "}
+        {dataBR(filtros.dataBase)}{" · "}primeira projeção: {dataBR(primeiraSemana?.inicio)} a{" "}
+        {dataBR(primeiraSemana?.fim)}{" · "}depois, semanas de sexta a quinta até {dataBR(fim)}
       </p>
     </Card>
   );
