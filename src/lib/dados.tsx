@@ -111,7 +111,7 @@ export const useLotes = () =>
 
 export function FiltrosProvider({ children }: { children: ReactNode }) {
   const [filtros, setF] = useState<Filtros>({
-    dataBase: iso(inicioSemana(new Date())),
+    dataBase: iso(new Date()),
     horizonte: 12,
     empresaIds: [],
     grupo: "todos",
@@ -124,8 +124,7 @@ export function FiltrosProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!dataBaseLote || dataBaseManual) return;
-    const inicio = iso(inicioSemana(addDias(toDate(dataBaseLote), 1)));
-    setF((a) => (a.dataBase === inicio ? a : { ...a, dataBase: inicio }));
+    setF((a) => (a.dataBase === dataBaseLote ? a : { ...a, dataBase: dataBaseLote }));
   }, [dataBaseLote, dataBaseManual]);
 
   const valor = useMemo(
@@ -260,10 +259,36 @@ export function useFluxo() {
     [disp.data, idsPermitidos],
   );
 
-  // Saldo inicial = soma dos saldos disponíveis, exceto Quotas.
-  const saldoInicial = disponibilidades
+  // A posição importada certifica o saldo na data-base da planilha.
+  const saldoPosicao = disponibilidades
     .filter((d) => d.disponivel_resgate && !ehQuota(d.tipo ?? ""))
     .reduce((a, d) => a + Number(d.saldo) - Number(d.valor_bloqueado ?? 0), 0);
+  const dataPosicao = lote.data?.data_base ?? disponibilidades[0]?.data_base ?? null;
+
+  // Reconstrói o saldo de abertura da primeira semana parcial. Assim, quando
+  // a posição é da própria data-base, o saldo calculado no fim do período
+  // coincide com a disponibilidade certificada e não há dupla contagem.
+  const saldoInicial = useMemo(() => {
+    if (!dataPosicao) return saldoPosicao;
+    const inicioParcial = inicioSemana(filtros.dataBase);
+    const fimCertificado = toDate(dataPosicao);
+    if (fimCertificado < inicioParcial) return saldoPosicao;
+
+    const fatorReceita = cenario?.fator_receita ?? 1;
+    const fatorDespesa = cenario?.fator_despesa ?? 1;
+    const liquidoAtePosicao = movimentacoes
+      .filter((m) => {
+        if (m.status === "cancelado") return false;
+        const data = toDate(m.data_prevista);
+        return data >= inicioParcial && data <= fimCertificado;
+      })
+      .reduce((total, m) => {
+        const valor = Number(m.valor_liquido || m.valor_original || 0);
+        return total + (m.natureza === "entrada" ? valor * fatorReceita : -valor * fatorDespesa);
+      }, 0);
+
+    return saldoPosicao - liquidoAtePosicao;
+  }, [saldoPosicao, dataPosicao, filtros.dataBase, movimentacoes, cenario]);
 
   const semanas = useMemo(
     () => montarSemanas(filtros.dataBase, filtros.horizonte),
@@ -284,6 +309,11 @@ export function useFluxo() {
     movimentacoes,
     disponibilidades,
     lote: lote.data ?? null,
+    dataBase: filtros.dataBase,
+    dataPosicao,
+    saldoPosicao,
+    saldoDataBase: fluxo.resultados[0]?.saldoFinal ?? saldoInicial,
+    saldoCertificado: dataPosicao === filtros.dataBase,
     carregando: movs.isLoading || disp.isLoading || empresas.isLoading,
   };
 }
