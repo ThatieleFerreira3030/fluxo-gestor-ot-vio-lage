@@ -8,7 +8,7 @@ import { DetalheMovimentacoes } from "@/components/DetalheMovimentacoes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFluxo } from "@/lib/dados";
-import { brl, dataBR, num } from "@/lib/format";
+import { brl, dataBR, iso, num } from "@/lib/format";
 import { STATUS_LABEL } from "@/lib/constants";
 import { exportarExcel } from "@/lib/exportar";
 
@@ -30,11 +30,18 @@ export const Route = createFileRoute("/_authenticated/pagamentos")({
 });
 
 function Pagamentos() {
-  const { fluxo, movimentacoes, empresas } = useFluxo();
+  const { fluxo, movimentacoes, empresas, dataBase } = useFluxo();
   const [categoria, setCategoria] = useState<string | null>(null);
   const [visiveis, setVisiveis] = useState(400);
 
-  const saidas = movimentacoes.filter((m) => m.natureza === "saida");
+  const fimPeriodo = fluxo.semanas.at(-1)?.fim;
+  const fimPeriodoIso = fimPeriodo ? iso(fimPeriodo) : dataBase;
+  const saidas = movimentacoes.filter(
+    (m) =>
+      m.natureza === "saida" &&
+      m.data_prevista >= dataBase &&
+      m.data_prevista <= fimPeriodoIso,
+  );
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
   const porCategoria = fluxo.linhas
     .filter((l) => l.grupo === "pagamentos")
