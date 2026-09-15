@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFluxo } from "@/lib/dados";
-import { brl, dataBR, num } from "@/lib/format";
+import { brl, dataBR, iso, num } from "@/lib/format";
 import { STATUS_LABEL } from "@/lib/constants";
 import { exportarExcel } from "@/lib/exportar";
 
@@ -29,10 +29,17 @@ export const Route = createFileRoute("/_authenticated/receitas")({
 });
 
 function Receitas() {
-  const { fluxo, movimentacoes, empresas } = useFluxo();
+  const { fluxo, movimentacoes, empresas, dataBase } = useFluxo();
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
-  const entradas = movimentacoes.filter((m) => m.natureza === "entrada");
+  const fimPeriodo = fluxo.semanas.at(-1)?.fim;
+  const fimPeriodoIso = fimPeriodo ? iso(fimPeriodo) : dataBase;
+  const entradas = movimentacoes.filter(
+    (m) =>
+      m.natureza === "entrada" &&
+      m.data_prevista >= dataBase &&
+      m.data_prevista <= fimPeriodoIso,
+  );
   const porCategoria = fluxo.linhas
     .filter((l) => l.grupo === "entradas")
     .map((l) => ({ categoria: l.categoria, Total: Math.round(l.total) }))
