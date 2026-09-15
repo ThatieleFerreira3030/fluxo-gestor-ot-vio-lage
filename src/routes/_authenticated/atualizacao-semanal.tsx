@@ -17,11 +17,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresas, useLoteAtivo, useLotes } from "@/lib/dados";
 import { montarSemanas, type Semana } from "@/lib/fluxo";
-import { brl, dataBR, dataHoraBR, iso, inicioSemana } from "@/lib/format";
+import { brl, dataBR, dataHoraBR, toDate } from "@/lib/format";
 import {
   FONTES,
   lerArquivo,
-  primeiraSemana,
   saldoInicialDe,
   ehQuota,
   type FonteId,
@@ -98,6 +97,13 @@ function AtualizacaoSemanal() {
   };
 
   const todos = FONTES.every((f) => leituras[f.id]);
+  const somenteDisponibilidades =
+    !!leituras.disponiveis &&
+    !leituras.entradas &&
+    !leituras.pagamentos &&
+    !leituras.amortizacoes;
+  const atualizacaoSomenteDisponibilidades =
+    somenteDisponibilidades && !!loteAtivo.data;
   const erros = FONTES.flatMap((f) => leituras[f.id]?.erros ?? []);
   const movimentos = useMemo(
     () => [
@@ -109,7 +115,7 @@ function AtualizacaoSemanal() {
   );
 
   const semanas: Semana[] = useMemo(
-    () => (dataBase ? montarSemanas(primeiraSemana(dataBase), HORIZONTE) : []),
+    () => (dataBase ? montarSemanas(dataBase, HORIZONTE) : []),
     [dataBase],
   );
 
@@ -125,15 +131,15 @@ function AtualizacaoSemanal() {
         : "pagamentos";
 
   const preview = useMemo(() => {
-    const idx = new Map(semanas.map((s) => [s.chave, s.indice]));
     const linhasPorSemana = semanas.map(() => ({
       entradas: [] as LinhaMovimento[],
       pagamentos: [] as LinhaMovimento[],
       amortizacoes: [] as LinhaMovimento[],
     }));
     for (const m of movimentos) {
-      const i = idx.get(iso(inicioSemana(m.data)));
-      if (i === undefined) continue;
+      const data = toDate(m.data);
+      const i = semanas.findIndex((s) => data >= s.inicio && data <= s.fim);
+      if (i < 0) continue;
       linhasPorSemana[i]![grupoDe(m)].push(m);
     }
     let saldo = saldoInicial;
@@ -150,10 +156,14 @@ function AtualizacaoSemanal() {
     return { linhasPorSemana, resultados };
   }, [semanas, movimentos, saldoInicial]);
 
-  const dentroDoPeriodo = useMemo(() => {
-    const chaves = new Set(semanas.map((s) => s.chave));
-    return movimentos.filter((m) => chaves.has(iso(inicioSemana(m.data))));
-  }, [movimentos, semanas]);
+  const dentroDoPeriodo = useMemo(
+    () =>
+      movimentos.filter((m) => {
+        const data = toDate(m.data);
+        return semanas.some((s) => data >= s.inicio && data <= s.fim);
+      }),
+    [movimentos, semanas],
+  );
 
   const totalPor = (g: "entradas" | "pagamentos" | "amortizacoes") =>
     dentroDoPeriodo.filter((m) => grupoDe(m) === g).reduce((a, m) => a + m.valor, 0);
@@ -172,7 +182,12 @@ function AtualizacaoSemanal() {
 
   const anterior = (loteAtivo.data?.totais ?? {}) as Record<string, number>;
   const podePublicar =
-    podeEditar && todos && !!dataBase && erros.length === 0 && conferido && !publicando;
+    podeEditar &&
+    (todos || atualizacaoSomenteDisponibilidades) &&
+    !!dataBase &&
+    erros.length === 0 &&
+    conferido &&
+    !publicando;
 
   const publicar = async () => {
     const disp = leituras.disponiveis;
@@ -207,10 +222,18 @@ function AtualizacaoSemanal() {
       const numero = (lotes.data?.[0]?.numero ?? 0) + 1;
       const totais = {
         saldoInicial,
-        entradas: totalPor("entradas"),
-        pagamentos: totalPor("pagamentos"),
-        amortizacoes: totalPor("amortizacoes"),
-        saldoFinal: preview.resultados.at(-1)?.final ?? saldoInicial,
+        entradas: atualizacaoSomenteDisponibilidades
+          ? Number(anterior["entradas"] ?? 0)
+          : totalPor("entradas"),
+        pagamentos: atualizacaoSomenteDisponibilidades
+          ? Number(anterior["pagamentos"] ?? 0)
+          : totalPor("pagamentos"),
+        amortizacoes: atualizacaoSomenteDisponibilidades
+          ? Number(anterior["amortizacoes"] ?? 0)
+          : totalPor("amortizacoes"),
+        saldoFinal: atualizacaoSomenteDisponibilidades
+          ? Number(anterior["saldoFinal"] ?? saldoInicial)
+          : (preview.resultados.at(-1)?.final ?? saldoInicial),
         registros: disp.disponibilidades.length + movimentos.length,
       };
       const { data: lote, error: eLote } = await supabase
@@ -221,19 +244,23 @@ function AtualizacaoSemanal() {
           status: "rascunho",
           usuario: user?.email ?? "sistema",
           arquivos: Object.fromEntries(
-            FONTES.map((f) => [
-              f.id,
-              {
-                arquivo: leituras[f.id]?.arquivo ?? null,
-                abas: leituras[f.id]?.abas ?? [],
-                registros:
-                  (leituras[f.id]?.movimentos.length ?? 0) +
-                  (leituras[f.id]?.disponibilidades.length ?? 0),
-                ignorados: leituras[f.id]?.ignorados ?? 0,
-                total: leituras[f.id]?.total ?? 0,
-                enviadoEm: leituras[f.id]?.enviadoEm ?? null,
-              },
-            ]),
+            FONTES.map((f) => {
+              const leitura = leituras[f.id];
+              const anteriorArquivo = (loteAtivo.data?.arquivos ?? {})[f.id];
+              return [
+                f.id,
+                leitura
+                  ? {
+                      arquivo: leitura.arquivo,
+                      abas: leitura.abas,
+                      registros: leitura.movimentos.length + leitura.disponibilidades.length,
+                      ignorados: leitura.ignorados,
+                      total: leitura.total,
+                      enviadoEm: leitura.enviadoEm,
+                    }
+                  : anteriorArquivo ?? null,
+              ];
+            }),
           ),
           totais,
           avisos: erros,
@@ -269,26 +296,56 @@ function AtualizacaoSemanal() {
         if (error) throw error;
       }
 
-      // 4. Movimentações das três fontes.
-      const linhasMov = movimentos.map((m) => ({
-        lote_id: loteId,
-        empresa_id: idEmpresa(m.empresa),
-        natureza: m.natureza,
-        categoria: m.categoria,
-        subcategoria: m.subcategoria,
-        descricao: m.descricao,
-        contraparte: m.contraparte,
-        documento: m.documento,
-        data_prevista: m.data,
-        data_vencimento: m.data,
-        valor_original: m.valor,
-        valor_liquido: m.valor,
-        status: m.status,
-        fonte: m.aba,
-        detalhe: m.detalhe,
-        chave_origem: m.chave,
-        demo: false,
-      }));
+      // 4. Movimentações das três fontes. Na atualização somente de
+      // disponibilidades, copia integralmente a base ativa para o novo lote.
+      let linhasMov: Record<string, unknown>[] = [];
+      if (atualizacaoSomenteDisponibilidades && loteAtivo.data?.id) {
+        const tamanhoPagina = 1000;
+        for (let inicio = 0; ; inicio += tamanhoPagina) {
+          const { data: pagina, error } = await supabase
+            .from("movimentacoes")
+            .select("*")
+            .eq("lote_id", loteAtivo.data.id)
+            .order("id")
+            .range(inicio, inicio + tamanhoPagina - 1);
+          if (error) throw error;
+
+          const registros = (pagina ?? []) as unknown as Record<string, unknown>[];
+          linhasMov.push(
+            ...registros.map((registro) => {
+              const {
+                id: _id,
+                created_at: _createdAt,
+                updated_at: _updatedAt,
+                lote_id: _loteAnterior,
+                ...campos
+              } = registro;
+              return { ...campos, lote_id: loteId };
+            }),
+          );
+          if (registros.length < tamanhoPagina) break;
+        }
+      } else {
+        linhasMov = movimentos.map((m) => ({
+          lote_id: loteId,
+          empresa_id: idEmpresa(m.empresa),
+          natureza: m.natureza,
+          categoria: m.categoria,
+          subcategoria: m.subcategoria,
+          descricao: m.descricao,
+          contraparte: m.contraparte,
+          documento: m.documento,
+          data_prevista: m.data,
+          data_vencimento: m.data,
+          valor_original: m.valor,
+          valor_liquido: m.valor,
+          status: m.status,
+          fonte: m.aba,
+          detalhe: m.detalhe,
+          chave_origem: m.chave,
+          demo: false,
+        }));
+      }
       for (let i = 0; i < linhasMov.length; i += 500) {
         const { error } = await supabase
           .from("movimentacoes")
@@ -321,7 +378,7 @@ function AtualizacaoSemanal() {
         <div>
           <h1 className="text-lg font-semibold">Atualização semanal</h1>
           <p className="text-sm text-muted-foreground">
-            Envie as quatro planilhas oficiais, confira os totais e publique a nova versão do fluxo.
+            Envie as quatro planilhas oficiais ou somente Disponíveis para certificar uma nova data-base.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -368,6 +425,10 @@ function AtualizacaoSemanal() {
                         Lido
                       </Badge>
                     )
+                  ) : atualizacaoSomenteDisponibilidades && f.id !== "disponiveis" ? (
+                    <Badge variant="outline" className="border-success/50 text-success">
+                      Mantida da versão ativa
+                    </Badge>
                   ) : (
                     <Badge variant="outline">Pendente</Badge>
                   )}
@@ -413,6 +474,29 @@ function AtualizacaoSemanal() {
           );
         })}
       </div>
+
+      {atualizacaoSomenteDisponibilidades && dataBase && (
+        <Card className="border-success/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Certificar disponibilidades em {dataBR(dataBase)}</CardTitle>
+            <CardDescription>
+              Entradas, pagamentos e amortizações serão preservados integralmente da versão ativa.
+              Somente os saldos e a data-base serão atualizados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={conferido}
+                onChange={(e) => setConferido(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Confiro que a posição de disponibilidades corresponde à data-base informada.
+            </label>
+          </CardContent>
+        </Card>
+      )}
 
       {erros.length > 0 && (
         <Card className="border-destructive/50">
