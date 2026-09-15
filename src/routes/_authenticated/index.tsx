@@ -63,10 +63,6 @@ function VisaoExecutiva() {
   const liquidezImediata = disponibilidades
     .filter((d) => d.liquidez === "imediata")
     .reduce((a, d) => a + Number(d.saldo), 0);
-  const naoConfirmados = movimentacoes
-    .filter((m) => m.status === "pendente" || m.status === "estimado")
-    .reduce((a, m) => a + Number(m.valor_liquido), 0);
-
   const saldoMinimo = cenario?.saldo_minimo ?? 0;
   const inicioPeriodo = fluxo.semanas[0]?.inicio;
   const fimPeriodo = fluxo.semanas[fluxo.semanas.length - 1]?.fim;
@@ -201,7 +197,6 @@ function VisaoExecutiva() {
           tom={fluxo.necessidadeMaxima > 0 ? "negativo" : "positivo"}
         />
         <Kpi titulo="Liquidez imediata" valor={brl(liquidezImediata, true)} detalhe="Disponível para resgate" />
-        <Kpi titulo="Valores não confirmados" valor={brl(naoConfirmados, true)} tom="alerta" detalhe="Estimados + pendentes" />
       </div>
 
       {semanasAlerta.length > 0 && (
