@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, Plus } from "lucide-react";
@@ -62,6 +62,10 @@ function Disponibilidades() {
   const { podeEditar } = useAuth();
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
+  const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
+  const [filtroBanco, setFiltroBanco] = useState("todos");
+  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [ordenacaoSaldo, setOrdenacaoSaldo] = useState<"desc" | "asc">("desc");
   const [form, setForm] = useState<Record<string, unknown>>({
     data_base: iso(new Date()),
     empresa_id: "",
@@ -77,16 +81,37 @@ function Disponibilidades() {
   });
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
-  const quotas = disponibilidades.filter((d) => tipoChave(d.tipo) === "quotas");
-  const semQuotas = disponibilidades.filter((d) => tipoChave(d.tipo) !== "quotas");
-  const contas = disponibilidades.filter((d) =>
+  const bancos = useMemo(
+    () => [...new Set(disponibilidades.map((d) => nomeBanco(d.banco)))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [disponibilidades],
+  );
+  const tipos = useMemo(
+    () => [...new Set(disponibilidades.map((d) => tipoChave(d.tipo)))].sort(),
+    [disponibilidades],
+  );
+  const disponibilidadesFiltradas = useMemo(
+    () =>
+      disponibilidades
+        .filter((d) => filtroEmpresa === "todas" || d.empresa_id === filtroEmpresa)
+        .filter((d) => filtroBanco === "todos" || nomeBanco(d.banco) === filtroBanco)
+        .filter((d) => filtroTipo === "todos" || tipoChave(d.tipo) === filtroTipo)
+        .sort((a, b) =>
+          ordenacaoSaldo === "desc"
+            ? Number(b.saldo) - Number(a.saldo)
+            : Number(a.saldo) - Number(b.saldo),
+        ),
+    [disponibilidades, filtroEmpresa, filtroBanco, filtroTipo, ordenacaoSaldo],
+  );
+  const quotas = disponibilidadesFiltradas.filter((d) => tipoChave(d.tipo) === "quotas");
+  const semQuotas = disponibilidadesFiltradas.filter((d) => tipoChave(d.tipo) !== "quotas");
+  const contas = disponibilidadesFiltradas.filter((d) =>
     ["conta_corrente", "caixa", "poupanca"].includes(tipoChave(d.tipo)),
   );
-  const aplicacoes = disponibilidades.filter((d) => tipoChave(d.tipo) === "aplicacao");
+  const aplicacoes = disponibilidadesFiltradas.filter((d) => tipoChave(d.tipo) === "aplicacao");
   const soma = (l: typeof disponibilidades) => l.reduce((a, d) => a + Number(d.saldo), 0);
 
   const porBanco = Object.entries(
-    disponibilidades.reduce<Record<string, number>>((acc, d) => {
+    disponibilidadesFiltradas.reduce<Record<string, number>>((acc, d) => {
       const b = nomeBanco(d.banco);
       acc[b] = (acc[b] ?? 0) + Number(d.saldo);
       return acc;
@@ -129,7 +154,7 @@ function Disponibilidades() {
             size="sm"
             onClick={() =>
               exportarExcel(
-                disponibilidades.map((d) => ({
+                disponibilidadesFiltradas.map((d) => ({
                   Empresa: nomeEmpresa(d.empresa_id),
                   Banco: nomeBanco(d.banco),
                   "Descrição original": d.banco,
@@ -157,6 +182,77 @@ function Disponibilidades() {
         </div>
       </div>
 
+      <Card className="mb-4 p-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Empresa</Label>
+            <Select value={filtroEmpresa} onValueChange={setFiltroEmpresa}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as empresas</SelectItem>
+                {empresas.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Banco</Label>
+            <Select value={filtroBanco} onValueChange={setFiltroBanco}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os bancos</SelectItem>
+                {bancos.map((banco) => (
+                  <SelectItem key={banco} value={banco}>
+                    {banco}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Tipo</Label>
+            <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os tipos</SelectItem>
+                {tipos.map((tipo) => (
+                  <SelectItem key={tipo} value={tipo}>
+                    {TIPO_LABEL[tipo] ?? tipo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Classificar pelo saldo</Label>
+            <Select
+              value={ordenacaoSaldo}
+              onValueChange={(v) => setOrdenacaoSaldo(v as "desc" | "asc")}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desc">Maior para menor</SelectItem>
+                <SelectItem value="asc">Menor para maior</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {disponibilidadesFiltradas.length} de {disponibilidades.length} registros exibidos
+        </p>
+      </Card>
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <Kpi
           titulo="Saldo sem quotas"
@@ -165,7 +261,7 @@ function Disponibilidades() {
         />
         <Kpi
           titulo="Saldo com quotas"
-          valor={brl(soma(disponibilidades), true)}
+          valor={brl(soma(disponibilidadesFiltradas), true)}
           detalhe="Inclui quotas de capital"
         />
         <Kpi
@@ -186,7 +282,7 @@ function Disponibilidades() {
         <Kpi
           titulo="Valores bloqueados"
           valor={brl(
-            disponibilidades.reduce((a, d) => a + Number(d.valor_bloqueado), 0),
+            disponibilidadesFiltradas.reduce((a, d) => a + Number(d.valor_bloqueado), 0),
             true,
           )}
           tom="alerta"
@@ -227,7 +323,7 @@ function Disponibilidades() {
                 </tr>
               </thead>
               <tbody>
-                {disponibilidades.map((d) => (
+                {disponibilidadesFiltradas.map((d) => (
                   <tr key={d.id} className="border-t hover:bg-muted/40">
                     <td className="p-2">{nomeEmpresa(d.empresa_id)}</td>
                     <td className="p-2 font-medium" title={d.banco}>
