@@ -1,4 +1,4 @@
-import { addDias, inicioSemana, iso } from "./format";
+import { addDias, inicioSemana, iso, toDate } from "./format";
 import { CATEGORIAS_AMORTIZACAO, CATEGORIAS_ENTRADA, CATEGORIAS_PAGAMENTO } from "./constants";
 
 export type Movimentacao = {
@@ -70,11 +70,17 @@ export type Fluxo = {
   semanaMaiorPagamento: Semana | null;
 };
 
+/**
+ * Monta o horizonte com uma primeira semana parcial, encerrada na data-base.
+ * As semanas seguintes retomam o ciclo normal de sexta a quinta.
+ */
 export const montarSemanas = (dataBase: string, horizonte: number): Semana[] => {
-  const base = inicioSemana(dataBase);
+  const inicioPrimeira = inicioSemana(dataBase);
+  const fimPrimeira = toDate(dataBase);
+
   return Array.from({ length: horizonte }, (_, i) => {
-    const ini = addDias(base, i * 7);
-    const fim = addDias(ini, 6);
+    const ini = addDias(inicioPrimeira, i * 7);
+    const fim = i === 0 ? fimPrimeira : addDias(ini, 6);
     return {
       indice: i,
       inicio: ini,
