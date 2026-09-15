@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularFluxo, montarSemanas, type Cenario, type Movimentacao } from "./fluxo";
-import { inicioSemana, iso, toDate } from "./format";
+import { addDias, inicioSemana, iso, toDate } from "./format";
 
 /** Quotas não compõem o saldo inicial do fluxo. */
 const ehQuota = (tipo: string) =>
@@ -264,30 +264,51 @@ export function useFluxo() {
     .filter((d) => d.disponivel_resgate && !ehQuota(d.tipo ?? ""))
     .reduce((a, d) => a + Number(d.saldo) - Number(d.valor_bloqueado ?? 0), 0);
   const dataPosicao = lote.data?.data_base ?? disponibilidades[0]?.data_base ?? null;
+  const inicioPeriodoDataBase = inicioSemana(filtros.dataBase);
+  const fimPeriodoDataBase = toDate(filtros.dataBase);
+  const fatorReceita = cenario?.fator_receita ?? 1;
+  const fatorDespesa = cenario?.fator_despesa ?? 1;
+  const valorAjustado = (m: Movimentacao) =>
+    Number(m.valor_liquido || m.valor_original || 0) *
+    (m.natureza === "entrada" ? fatorReceita : fatorDespesa);
 
-  // Reconstrói o saldo de abertura da primeira semana parcial. Assim, quando
-  // a posição é da própria data-base, o saldo calculado no fim do período
-  // coincide com a disponibilidade certificada e não há dupla contagem.
-  const saldoInicial = useMemo(() => {
-    if (!dataPosicao) return saldoPosicao;
-    const inicioParcial = inicioSemana(filtros.dataBase);
-    const fimCertificado = toDate(dataPosicao);
-    if (fimCertificado < inicioParcial) return saldoPosicao;
+  const movimentacoesDataBase = useMemo(
+    () =>
+      movimentacoes.filter((m) => {
+        if (m.status === "cancelado") return false;
+        const data = toDate(m.data_prevista);
+        return data >= inicioPeriodoDataBase && data <= fimPeriodoDataBase;
+      }),
+    [movimentacoes, filtros.dataBase],
+  );
 
-    const fatorReceita = cenario?.fator_receita ?? 1;
-    const fatorDespesa = cenario?.fator_despesa ?? 1;
-    const liquidoAtePosicao = movimentacoes
+  const entradasDataBase = movimentacoesDataBase
+    .filter((m) => m.natureza === "entrada")
+    .reduce((total, m) => total + valorAjustado(m), 0);
+  const saidasDataBase = movimentacoesDataBase
+    .filter((m) => m.natureza === "saida")
+    .reduce((total, m) => total + valorAjustado(m), 0);
+
+  // Transporta a última posição certificada até a data escolhida. Se a
+  // planilha é da própria data-base, usa exatamente o saldo importado.
+  const saldoDataBase = useMemo(() => {
+    if (!dataPosicao || dataPosicao === filtros.dataBase) return saldoPosicao;
+    const posicao = toDate(dataPosicao);
+    const base = toDate(filtros.dataBase);
+    const inicio = posicao < base ? addDias(posicao, 1) : addDias(base, 1);
+    const fim = posicao < base ? base : posicao;
+    const liquido = movimentacoes
       .filter((m) => {
         if (m.status === "cancelado") return false;
         const data = toDate(m.data_prevista);
-        return data >= inicioParcial && data <= fimCertificado;
+        return data >= inicio && data <= fim;
       })
-      .reduce((total, m) => {
-        const valor = Number(m.valor_liquido || m.valor_original || 0);
-        return total + (m.natureza === "entrada" ? valor * fatorReceita : -valor * fatorDespesa);
-      }, 0);
-
-    return saldoPosicao - liquidoAtePosicao;
+      .reduce(
+        (total, m) =>
+          total + (m.natureza === "entrada" ? valorAjustado(m) : -valorAjustado(m)),
+        0,
+      );
+    return posicao < base ? saldoPosicao + liquido : saldoPosicao - liquido;
   }, [saldoPosicao, dataPosicao, filtros.dataBase, movimentacoes, cenario]);
 
   const semanas = useMemo(
@@ -296,8 +317,8 @@ export function useFluxo() {
   );
 
   const fluxo = useMemo(
-    () => calcularFluxo(movimentacoes, saldoInicial, semanas, cenario),
-    [movimentacoes, saldoInicial, semanas, cenario],
+    () => calcularFluxo(movimentacoes, saldoDataBase, semanas, cenario),
+    [movimentacoes, saldoDataBase, semanas, cenario],
   );
 
   return {
@@ -312,7 +333,11 @@ export function useFluxo() {
     dataBase: filtros.dataBase,
     dataPosicao,
     saldoPosicao,
-    saldoDataBase: fluxo.resultados[0]?.saldoFinal ?? saldoInicial,
+    saldoDataBase,
+    inicioPeriodoDataBase,
+    fimPeriodoDataBase,
+    entradasDataBase,
+    saidasDataBase,
     saldoCertificado: dataPosicao === filtros.dataBase,
     carregando: movs.isLoading || disp.isLoading || empresas.isLoading,
   };
