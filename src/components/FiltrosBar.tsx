@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/command";
 import { HORIZONTES } from "@/lib/constants";
 import { useCenarios, useEmpresas, useFiltros } from "@/lib/dados";
-import { addDias, dataBR, toDate } from "@/lib/format";
+import { dataBR } from "@/lib/format";
+import { montarSemanas } from "@/lib/fluxo";
 import { cn } from "@/lib/utils";
 
 function FiltroEmpresas() {
@@ -88,7 +89,9 @@ export function FiltrosBar() {
   const { filtros, setFiltros } = useFiltros();
   const { data: empresas } = useEmpresas();
   const { data: cenarios } = useCenarios();
-  const fim = addDias(toDate(filtros.dataBase), filtros.horizonte * 7 - 1);
+  const semanas = montarSemanas(filtros.dataBase, filtros.horizonte);
+  const primeiraSemana = semanas[0];
+  const fim = semanas.at(-1)?.fim;
   const empresasSelecionadas = (empresas ?? []).filter((e) => filtros.empresaIds.includes(e.id));
 
   return (
@@ -161,7 +164,8 @@ export function FiltrosBar() {
         </div>
       )}
       <p className="mt-3 text-xs text-muted-foreground">
-        Período projetado: {dataBR(filtros.dataBase)} a {dataBR(fim)}
+        Primeiro período parcial: {dataBR(primeiraSemana?.inicio)} a {dataBR(primeiraSemana?.fim)}
+        {" · "}semanas seguintes de sexta a quinta{" · "}horizonte até {dataBR(fim)}
       </p>
     </Card>
   );
