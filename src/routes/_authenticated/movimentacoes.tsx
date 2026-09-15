@@ -67,7 +67,7 @@ const vazio = {
 };
 
 function Movimentacoes() {
-  const { movimentacoes, empresas, carregando } = useFluxo();
+  const { fluxo, movimentacoes, empresas, carregando, dataBase } = useFluxo();
   const { podeEditar, user } = useAuth();
   const qc = useQueryClient();
   const [busca, setBusca] = useState("");
@@ -79,10 +79,13 @@ function Movimentacoes() {
   const [visiveis, setVisiveis] = useState(500);
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
+  const fimPeriodo = fluxo.semanas.at(-1)?.fim;
+  const fimPeriodoIso = fimPeriodo ? iso(fimPeriodo) : dataBase;
 
   const lista = useMemo(
     () =>
       movimentacoes.filter((m) => {
+        if (m.data_prevista < dataBase || m.data_prevista > fimPeriodoIso) return false;
         if (natureza !== "todas" && m.natureza !== natureza) return false;
         if (!busca) return true;
         const t = busca.toLowerCase();
@@ -90,7 +93,7 @@ function Movimentacoes() {
           .filter(Boolean)
           .some((v) => String(v).toLowerCase().includes(t));
       }),
-    [movimentacoes, busca, natureza, empresas],
+    [movimentacoes, busca, natureza, empresas, dataBase, fimPeriodoIso],
   );
 
   const salvar = useMutation({
