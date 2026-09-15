@@ -6,7 +6,7 @@ import { DetalheMovimentacoes } from "@/components/DetalheMovimentacoes";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useFluxo } from "@/lib/dados";
-import { brl, inicioSemana, iso } from "@/lib/format";
+import { brl, toDate } from "@/lib/format";
 import { exportarExcel, exportarPDF } from "@/lib/exportar";
 import type { LinhaFluxo, Movimentacao } from "@/lib/fluxo";
 import { cn } from "@/lib/utils";
@@ -40,15 +40,18 @@ function FluxoSemanal() {
   const [detalhe, setDetalhe] = useState<{ titulo: string; movs: Movimentacao[] } | null>(null);
   const saldoMinimo = cenario?.saldo_minimo ?? 0;
 
-  const abrir = (categoria: string, semanaChave?: string) =>
+  const abrir = (categoria: string, semanaChave?: string) => {
+    const semana = fluxo.semanas.find((s) => s.chave === semanaChave);
     setDetalhe({
-      titulo: semanaChave ? `${categoria} — semana selecionada` : categoria,
-      movs: movimentacoes.filter(
-        (m) =>
-          m.categoria === categoria &&
-          (!semanaChave || iso(inicioSemana(m.data_prevista)) === semanaChave),
-      ),
+      titulo: semana ? `${categoria} — ${semana.rotulo}` : categoria,
+      movs: movimentacoes.filter((m) => {
+        if (m.categoria !== categoria) return false;
+        if (!semana) return true;
+        const data = toDate(m.data_prevista);
+        return data >= semana.inicio && data <= semana.fim;
+      }),
     });
+  };
 
   const cabecalho = ["Categoria", ...fluxo.semanas.map((s) => s.rotulo), "Total"];
 
