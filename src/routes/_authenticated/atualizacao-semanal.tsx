@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresas, useLoteAtivo, useLotes } from "@/lib/dados";
+import { chaveEmpresa, nomeOficialEmpresa } from "@/lib/empresas";
 import { montarSemanas, type Semana } from "@/lib/fluxo";
 import { brl, dataBR, dataHoraBR, toDate } from "@/lib/format";
 import {
@@ -50,13 +51,6 @@ export const Route = createFileRoute("/_authenticated/atualizacao-semanal")({
 });
 
 const HORIZONTE = 13;
-
-const semAcento = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
 
 type Leituras = Partial<Record<FonteId, LeituraFonte>>;
 
@@ -98,12 +92,8 @@ function AtualizacaoSemanal() {
 
   const todos = FONTES.every((f) => leituras[f.id]);
   const somenteDisponibilidades =
-    !!leituras.disponiveis &&
-    !leituras.entradas &&
-    !leituras.pagamentos &&
-    !leituras.amortizacoes;
-  const atualizacaoSomenteDisponibilidades =
-    somenteDisponibilidades && !!loteAtivo.data;
+    !!leituras.disponiveis && !leituras.entradas && !leituras.pagamentos && !leituras.amortizacoes;
+  const atualizacaoSomenteDisponibilidades = somenteDisponibilidades && !!loteAtivo.data;
   const erros = FONTES.flatMap((f) => leituras[f.id]?.erros ?? []);
   const movimentos = useMemo(
     () => [
@@ -196,27 +186,31 @@ function AtualizacaoSemanal() {
     let loteId: string | null = null;
     try {
       // 1. Empresas ausentes são cadastradas para manter os filtros funcionando.
-      const nomes = new Set<string>();
-      disp.disponibilidades.forEach((d) => nomes.add(d.empresa));
-      movimentos.forEach((m) => m.empresa && nomes.add(m.empresa));
+      const nomes = new Map<string, string>();
+      disp.disponibilidades.forEach((d) =>
+        nomes.set(chaveEmpresa(d.empresa), nomeOficialEmpresa(d.empresa)),
+      );
+      movimentos.forEach(
+        (m) => m.empresa && nomes.set(chaveEmpresa(m.empresa), nomeOficialEmpresa(m.empresa)),
+      );
       const existentes = new Map(
         (empresas ?? []).flatMap((e) => {
-          const chaves: [string, string][] = [[semAcento(e.nome), e.id]];
-          if (e.apelido) chaves.push([semAcento(e.apelido), e.id]);
+          const chaves: [string, string][] = [[chaveEmpresa(e.nome), e.id]];
+          if (e.apelido) chaves.push([chaveEmpresa(e.apelido), e.id]);
           return chaves;
         }),
       );
-      const faltantes = [...nomes].filter((n) => n && !existentes.has(semAcento(n)));
+      const faltantes = [...nomes].filter(([chave]) => chave && !existentes.has(chave));
       if (faltantes.length) {
         const { data: criadas, error } = await supabase
           .from("empresas")
-          .insert(faltantes.map((nome) => ({ nome, ativa: true, demo: false })))
+          .insert(faltantes.map(([, nome]) => ({ nome, ativa: true, demo: false })))
           .select("id, nome");
         if (error) throw error;
-        (criadas ?? []).forEach((e) => existentes.set(semAcento(e.nome), e.id));
+        (criadas ?? []).forEach((e) => existentes.set(chaveEmpresa(e.nome), e.id));
       }
       const idEmpresa = (nome: string | null) =>
-        nome ? (existentes.get(semAcento(nome)) ?? null) : null;
+        nome ? (existentes.get(chaveEmpresa(nome)) ?? null) : null;
 
       // 2. Lote em rascunho.
       const numero = (lotes.data?.[0]?.numero ?? 0) + 1;
@@ -258,7 +252,7 @@ function AtualizacaoSemanal() {
                       total: leitura.total,
                       enviadoEm: leitura.enviadoEm,
                     }
-                  : anteriorArquivo ?? null,
+                  : (anteriorArquivo ?? null),
               ];
             }),
           ),
@@ -376,7 +370,8 @@ function AtualizacaoSemanal() {
         <div>
           <h1 className="text-lg font-semibold">Atualização semanal</h1>
           <p className="text-sm text-muted-foreground">
-            Envie as quatro planilhas oficiais ou somente Disponíveis para certificar uma nova data-base.
+            Envie as quatro planilhas oficiais ou somente Disponíveis para certificar uma nova
+            data-base.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -389,7 +384,11 @@ function AtualizacaoSemanal() {
             onChange={(e) => void receber(e.target.files)}
           />
           <Button variant="outline" onClick={() => inputRef.current?.click()} disabled={lendo}>
-            {lendo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            {lendo ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
             Selecionar planilhas
           </Button>
           <Button onClick={() => void publicar()} disabled={!podePublicar}>
@@ -440,7 +439,13 @@ function AtualizacaoSemanal() {
                 </p>
                 <p>
                   <span className="text-muted-foreground">Data-base: </span>
-                  {f.id === "disponiveis" ? (l?.dataBase ? dataBR(l.dataBase) : "—") : dataBase ? dataBR(dataBase) : "—"}
+                  {f.id === "disponiveis"
+                    ? l?.dataBase
+                      ? dataBR(l.dataBase)
+                      : "—"
+                    : dataBase
+                      ? dataBR(dataBase)
+                      : "—"}
                 </p>
                 <p>
                   <span className="text-muted-foreground">Abas: </span>
@@ -476,7 +481,9 @@ function AtualizacaoSemanal() {
       {atualizacaoSomenteDisponibilidades && dataBase && (
         <Card className="border-success/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Certificar disponibilidades em {dataBR(dataBase)}</CardTitle>
+            <CardTitle className="text-base">
+              Certificar disponibilidades em {dataBR(dataBase)}
+            </CardTitle>
             <CardDescription>
               Entradas, pagamentos e amortizações serão preservados integralmente da versão ativa.
               Somente os saldos e a data-base serão atualizados.
@@ -550,19 +557,26 @@ function AtualizacaoSemanal() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Totais por semana</CardTitle>
-              <CardDescription>Clique em um valor para ver as linhas das planilhas.</CardDescription>
+              <CardDescription>
+                Clique em um valor para ver as linhas das planilhas.
+              </CardDescription>
             </CardHeader>
             <CardContent className="overflow-auto">
               <table className="w-full text-xs">
                 <thead className="bg-muted/50">
                   <tr>
-                    {["Semana", "Saldo inicial", "Entradas", "Pagamentos", "Amortizações", "Saldo final"].map(
-                      (h) => (
-                        <th key={h} className="p-2 text-left font-medium">
-                          {h}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      "Semana",
+                      "Saldo inicial",
+                      "Entradas",
+                      "Pagamentos",
+                      "Amortizações",
+                      "Saldo final",
+                    ].map((h) => (
+                      <th key={h} className="p-2 text-left font-medium">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -656,7 +670,10 @@ function AtualizacaoSemanal() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {(lotes.data ?? []).map((l) => (
-            <div key={l.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
+            <div
+              key={l.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
+            >
               <div>
                 <p className="font-medium">
                   Versão {l.numero} · data-base {dataBR(l.data_base)}
@@ -668,7 +685,13 @@ function AtualizacaoSemanal() {
               </div>
               <div className="flex items-center gap-3 text-xs">
                 <span>Entradas {brl(Number(l.totais?.["entradas"] ?? 0), true)}</span>
-                <span>Saídas {brl(Number(l.totais?.["pagamentos"] ?? 0) + Number(l.totais?.["amortizacoes"] ?? 0), true)}</span>
+                <span>
+                  Saídas{" "}
+                  {brl(
+                    Number(l.totais?.["pagamentos"] ?? 0) + Number(l.totais?.["amortizacoes"] ?? 0),
+                    true,
+                  )}
+                </span>
                 <Badge variant={l.status === "ativo" ? "default" : "outline"}>
                   {l.status === "ativo" ? "Ativa" : "Histórico"}
                 </Badge>
@@ -697,11 +720,13 @@ function AtualizacaoSemanal() {
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted">
                 <tr>
-                  {["Aba", "Data", "Categoria", "Detalhe", "Contraparte", "Situação", "Valor"].map((h) => (
-                    <th key={h} className="p-2 text-left font-medium">
-                      {h}
-                    </th>
-                  ))}
+                  {["Aba", "Data", "Categoria", "Detalhe", "Contraparte", "Situação", "Valor"].map(
+                    (h) => (
+                      <th key={h} className="p-2 text-left font-medium">
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody>
