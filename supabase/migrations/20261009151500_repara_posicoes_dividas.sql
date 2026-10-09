@@ -1,3 +1,5 @@
+-- Reparo idempotente para ambientes em que a publicação do front-end ocorreu
+-- antes da criação da tabela de posições contábeis.
 create table if not exists public.posicoes_dividas (
   id uuid primary key default gen_random_uuid(),
   lote_id uuid references public.lotes_importacao(id) on delete set null,
@@ -30,6 +32,7 @@ drop policy if exists "leitura autenticada" on public.posicoes_dividas;
 drop policy if exists "escrita editores" on public.posicoes_dividas;
 drop policy if exists "update editores" on public.posicoes_dividas;
 drop policy if exists "delete editores" on public.posicoes_dividas;
+
 create policy "leitura autenticada" on public.posicoes_dividas
   for select to authenticated using (true);
 create policy "escrita editores" on public.posicoes_dividas
