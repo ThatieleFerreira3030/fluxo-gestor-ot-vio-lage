@@ -61,3 +61,24 @@ export const encontrarEmpresa = <T extends EmpresaIdentificavel>(empresas: T[], 
       (!!empresa.apelido && chaveEmpresa(empresa.apelido) === chave),
   );
 };
+
+/** Agrupa cadastros duplicados para exibir uma única opção nos filtros. */
+export const agruparEmpresas = <T extends EmpresaIdentificavel>(empresas: T[]) => {
+  const grupos = new Map<string, { chave: string; nome: string; ids: string[] }>();
+
+  for (const empresa of empresas) {
+    const chave = chaveEmpresa(empresa.nome);
+    const grupo = grupos.get(chave);
+    if (grupo) {
+      grupo.ids.push(empresa.id);
+    } else {
+      grupos.set(chave, {
+        chave,
+        nome: nomeOficialEmpresa(empresa.nome),
+        ids: [empresa.id],
+      });
+    }
+  }
+
+  return [...grupos.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+};
