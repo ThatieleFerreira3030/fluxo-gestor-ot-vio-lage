@@ -193,9 +193,6 @@ function AtualizacaoSemanal() {
       movimentos.forEach(
         (m) => m.empresa && nomes.set(chaveEmpresa(m.empresa), nomeOficialEmpresa(m.empresa)),
       );
-      leituras.amortizacoes?.dividas?.forEach(
-        (d) => d.empresa && nomes.set(chaveEmpresa(d.empresa), nomeOficialEmpresa(d.empresa)),
-      );
       const existentes = new Map(
         (empresas ?? []).flatMap((e) => {
           const chaves: [string, string][] = [[chaveEmpresa(e.nome), e.id]];
@@ -348,36 +345,7 @@ function AtualizacaoSemanal() {
         if (error) throw error;
       }
 
-      // 5. Registra uma fotografia mensal do saldo contábil das dívidas.
-      const dividasAtuais = leituras.amortizacoes?.dividas ?? [];
-      if (dividasAtuais.length) {
-        const linhasDividas = dividasAtuais.map((d) => ({
-          lote_id: loteId,
-          data_base: dataBase,
-          empresa_id: idEmpresa(d.empresa),
-          chave_origem: d.chave,
-          tipo: d.tipo,
-          credor: d.credor,
-          modalidade: d.modalidade,
-          numero_contrato: d.contrato,
-          saldo_contabil_aproximado: d.saldoContabil,
-          indexador: d.indexador,
-          taxa: d.taxa,
-          vencimento: d.vencimento,
-          parcelas_restantes: d.parcelasRestantes,
-          safra_1: d.safra1,
-          safra_2: d.safra2,
-          safra_3: d.safra3,
-          outras_safras: d.outrasSafras,
-          fonte: "Saldos atuais",
-        }));
-        const { error } = await supabase.from("posicoes_dividas").upsert(linhasDividas, {
-          onConflict: "data_base,chave_origem",
-        });
-        if (error) throw error;
-      }
-
-      // 6. Troca atômica da versão ativa.
+      // 5. Troca atômica da versão ativa.
       const { error: ePub } = await supabase.rpc("publicar_lote", { _lote: loteId });
       if (ePub) throw ePub;
 
