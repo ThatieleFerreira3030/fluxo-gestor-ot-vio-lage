@@ -814,7 +814,13 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
 
   // "Saldos atuais" é a fonte oficial do endividamento. O Cronograma permanece
   // apenas como provisão dos pagamentos futuros.
-  const nomeSaldos = acharAba(wb, "Saldos atuais");
+  const nomeSaldos =
+    acharAba(wb, "Saldos atuais") ??
+    acharAba(wb, "Saldo atuais") ??
+    wb.SheetNames.find((n) => {
+      const nome = semAcento(n);
+      return nome.includes("saldo") && nome.includes("atual");
+    });
   const dividas: LinhaDivida[] = [];
   if (!nomeSaldos) {
     erros.push('Aba "Saldos atuais" não encontrada para atualizar o endividamento.');
@@ -876,6 +882,11 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
           outrasSafras: numero(r[colunasSafra[3]?.indice ?? -1]) ?? 0,
         });
       }
+      if (!dividas.length) {
+        erros.push(
+          `A aba "${nomeSaldos}" foi encontrada, mas nenhuma linha válida de saldo foi reconhecida. Confira as colunas "Saldo contábil aproximado", "Empresa", "Credor" e "Tipo".`,
+        );
+      }
     }
   }
 
@@ -894,6 +905,16 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
         ignorados,
         total: movimentos.reduce((a, m) => a + m.valor, 0),
       },
+      ...(nomeSaldos
+        ? [
+            {
+              aba: nomeSaldos,
+              registros: dividas.length,
+              ignorados: 0,
+              total: dividas.reduce((a, d) => a + d.saldoContabil, 0),
+            },
+          ]
+        : []),
     ],
     ignorados,
     erros,
