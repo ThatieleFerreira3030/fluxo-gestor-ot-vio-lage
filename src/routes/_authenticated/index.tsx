@@ -48,7 +48,16 @@ export const Route = createFileRoute("/_authenticated/")({
   component: VisaoExecutiva,
 });
 
-const CORES = ["#1f2d4a", "#2f7d55", "#b03a2e", "#c98a1e", "#3a6ea5", "#6b7f9e", "#7d5ba6", "#3e8e8e"];
+const CORES = [
+  "#1a4122",
+  "#03877a",
+  "#f57900",
+  "#85a33a",
+  "#b99b65",
+  "#35613e",
+  "#d7903b",
+  "#5b8c84",
+];
 
 function VisaoExecutiva() {
   const {
@@ -157,7 +166,8 @@ function VisaoExecutiva() {
       movs: movimentacoes.filter((m) => m.categoria === categoria),
     });
 
-  if (carregando) return <p className="text-sm text-muted-foreground">Carregando dados do fluxo…</p>;
+  if (carregando)
+    return <p className="text-sm text-muted-foreground">Carregando dados do fluxo…</p>;
 
   return (
     <div>
@@ -246,28 +256,54 @@ function VisaoExecutiva() {
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Evolução semanal do caixa</CardTitle>
-            <CardDescription>Saldo inicial, entradas, saídas e saldo final por semana</CardDescription>
+            <CardDescription>
+              Saldo inicial, entradas, saídas e saldo final por semana
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={dadosSemanais}
-                onClick={(e) => typeof e?.activeTooltipIndex === "number" && abrirSemana(e.activeTooltipIndex)}
+                onClick={(e) =>
+                  typeof e?.activeTooltipIndex === "number" && abrirSemana(e.activeTooltipIndex)
+                }
               >
                 <defs>
                   <linearGradient id="gSaldo" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1f2d4a" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="#1f2d4a" stopOpacity={0.02} />
+                    <stop offset="5%" stopColor="#1a4122" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#1a4122" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e6e9ef" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dfd5c3" />
                 <XAxis dataKey="semana" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => brl(Number(v), true)} width={80} />
+                <YAxis
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(v) => brl(Number(v), true)}
+                  width={80}
+                />
                 <Tooltip formatter={(v) => brl(Number(v))} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="Saldo final" stroke="#1f2d4a" fill="url(#gSaldo)" strokeWidth={2} />
-                <Line type="monotone" dataKey="Entradas" stroke="#2f7d55" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="Saídas" stroke="#b03a2e" dot={false} strokeWidth={2} />
+                <Area
+                  type="monotone"
+                  dataKey="Saldo final"
+                  stroke="#1a4122"
+                  fill="url(#gSaldo)"
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Entradas"
+                  stroke="#03877a"
+                  dot={false}
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Saídas"
+                  stroke="#b03a2e"
+                  dot={false}
+                  strokeWidth={2}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -282,13 +318,19 @@ function VisaoExecutiva() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={dadosSemanais}
-                onClick={(e) => typeof e?.activeTooltipIndex === "number" && abrirSemana(e.activeTooltipIndex)}
+                onClick={(e) =>
+                  typeof e?.activeTooltipIndex === "number" && abrirSemana(e.activeTooltipIndex)
+                }
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e6e9ef" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dfd5c3" />
                 <XAxis dataKey="semana" tick={{ fontSize: 9 }} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => brl(Number(v), true)} width={70} />
+                <YAxis
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(v) => brl(Number(v), true)}
+                  width={70}
+                />
                 <Tooltip formatter={(v) => brl(Number(v))} />
-                <Bar dataKey="Entradas" fill="#2f7d55" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Entradas" fill="#03877a" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="Saídas" fill="#b03a2e" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -379,7 +421,9 @@ function VisaoExecutiva() {
                     {m.contraparte} · {dataBR(m.data_prevista)}
                   </span>
                 </span>
-                <span className="num shrink-0 text-destructive">{brl(Number(m.valor_liquido), true)}</span>
+                <span className="num shrink-0 text-destructive">
+                  {brl(Number(m.valor_liquido), true)}
+                </span>
               </button>
             ))}
           </CardContent>
@@ -398,7 +442,8 @@ function VisaoExecutiva() {
           <p className="text-sm text-muted-foreground">
             {fluxo.totalSaidas > 0
               ? pct(
-                  (fluxo.resultados[fluxo.semanaMaiorPagamento?.indice ?? 0]?.saidas ?? 0) / fluxo.totalSaidas,
+                  (fluxo.resultados[fluxo.semanaMaiorPagamento?.indice ?? 0]?.saidas ?? 0) /
+                    fluxo.totalSaidas,
                 )
               : "0%"}{" "}
             das saídas do período
@@ -414,7 +459,6 @@ function VisaoExecutiva() {
           </p>
         </Card>
       </div>
-
 
       <DetalheMovimentacoes
         aberto={!!detalhe}

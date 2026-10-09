@@ -73,18 +73,25 @@ function AuthPage() {
 
   const google = async () => {
     const { lovable } = await import("@/integrations/lovable/index");
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const r = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
     if (r.error) toast.error("Falha no acesso com Google.");
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-primary/95 px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary px-4 before:absolute before:-bottom-24 before:-left-20 before:h-56 before:w-[65%] before:-rotate-3 before:bg-success after:absolute after:-bottom-32 after:right-[-8%] after:h-64 after:w-[80%] after:rotate-[-5deg] after:bg-warning">
       <div className="w-full max-w-md">
-        <div className="mb-6 text-center text-primary-foreground">
-          <p className="text-sm uppercase tracking-widest opacity-80">Grupo Otávio Lage</p>
-          <h1 className="mt-1 text-2xl font-semibold">Fluxo de Caixa Semanal</h1>
+        <div className="relative z-10 mb-6 text-center text-primary-foreground">
+          <div className="mx-auto mb-5 w-52 rounded-xl bg-[#f6f0e0] px-5 py-3 shadow-xl">
+            <img src="/lage-logo.png" alt="Grupo Otávio Lage" className="w-full" />
+          </div>
+          <p className="text-xs uppercase tracking-[0.25em] text-warning">
+            Inteligência financeira
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold">Fluxo de Caixa Semanal</h1>
         </div>
-        <Card>
+        <Card className="relative z-10 border-white/20 bg-card/98 shadow-2xl">
           <CardHeader>
             <CardTitle>Acesso restrito</CardTitle>
             <CardDescription>Financeiro e Diretoria</CardDescription>
@@ -99,11 +106,23 @@ function AuthPage() {
                 <form onSubmit={entrar} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">E-mail</Label>
-                    <Input id="email" type="email" value={email} required onChange={(e) => setEmail(e.target.value)} />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      required
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="senha">Senha</Label>
-                    <Input id="senha" type="password" value={senha} required onChange={(e) => setSenha(e.target.value)} />
+                    <Input
+                      id="senha"
+                      type="password"
+                      value={senha}
+                      required
+                      onChange={(e) => setSenha(e.target.value)}
+                    />
                   </div>
                   <Button type="submit" className="w-full" disabled={carregando}>
                     Entrar
@@ -114,11 +133,22 @@ function AuthPage() {
                 <form onSubmit={cadastrar} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="nome">Nome</Label>
-                    <Input id="nome" value={nome} required onChange={(e) => setNome(e.target.value)} />
+                    <Input
+                      id="nome"
+                      value={nome}
+                      required
+                      onChange={(e) => setNome(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email2">E-mail corporativo</Label>
-                    <Input id="email2" type="email" value={email} required onChange={(e) => setEmail(e.target.value)} />
+                    <Input
+                      id="email2"
+                      type="email"
+                      value={email}
+                      required
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="senha2">Senha</Label>

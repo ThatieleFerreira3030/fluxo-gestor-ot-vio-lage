@@ -37,7 +37,12 @@ const NAV = [
   { to: "/dividas", rotulo: "Dívidas e Operações", icone: Banknote, somenteAdmin: false },
   { to: "/atualizacao-semanal", rotulo: "Atualização Semanal", icone: Upload, somenteAdmin: true },
   { to: "/importacoes", rotulo: "Importações", icone: FileUp, somenteAdmin: true },
-  { to: "/conciliacao", rotulo: "Conciliação e Pendências", icone: ShieldCheck, somenteAdmin: true },
+  {
+    to: "/conciliacao",
+    rotulo: "Conciliação e Pendências",
+    icone: ShieldCheck,
+    somenteAdmin: true,
+  },
   { to: "/cenarios", rotulo: "Cenários", icone: GitCompare, somenteAdmin: true },
   { to: "/projetado-realizado", rotulo: "Projetado x Realizado", icone: Scale, somenteAdmin: true },
   { to: "/versoes", rotulo: "Histórico de Versões", icone: History, somenteAdmin: true },
@@ -59,7 +64,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { filtros } = useFiltros();
   const { data: cenarios } = useCenarios();
   const rota = useRouterState({ select: (s) => s.location.pathname });
-  const cenario = cenarios?.find((c) => c.id === filtros.cenarioId) ?? cenarios?.find((c) => c.oficial);
+  const cenario =
+    cenarios?.find((c) => c.id === filtros.cenarioId) ?? cenarios?.find((c) => c.oficial);
   const ehAdmin = perfil === "admin";
   const rotaRestrita = ROTAS_ADMIN.some((r) => rota.startsWith(r));
   const bloqueado = !ehAdmin && rotaRestrita;
@@ -72,14 +78,25 @@ export function AppLayout({ children }: { children: ReactNode }) {
           recolhida ? "w-16" : "w-64",
         )}
       >
-        <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
-            OL
+        <div className="relative flex items-center gap-3 border-b border-sidebar-border px-3 py-4 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-sidebar-primary">
+          <div
+            className={cn(
+              "flex shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#f6f0e0] shadow-sm",
+              recolhida ? "h-10 w-10 p-1" : "h-12 w-24 p-1.5",
+            )}
+          >
+            <img
+              src="/lage-logo.png"
+              alt="Grupo Otávio Lage"
+              className="h-full w-full object-contain"
+            />
           </div>
           {!recolhida && (
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">Fluxo de Caixa</p>
-              <p className="truncate text-xs text-sidebar-foreground/70">Grupo Otávio Lage</p>
+              <p className="truncate text-[10px] uppercase tracking-[0.16em] text-sidebar-primary">
+                Gestão financeira
+              </p>
             </div>
           )}
         </div>
@@ -96,7 +113,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   ativo
-                    ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                    ? "border-l-2 border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-sm"
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
                 )}
               >
@@ -119,7 +136,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             onClick={() => setRecolhida((v) => !v)}
             className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
           >
-            <ChevronLeft className={cn("h-4 w-4 transition-transform", recolhida && "rotate-180")} />
+            <ChevronLeft
+              className={cn("h-4 w-4 transition-transform", recolhida && "rotate-180")}
+            />
             {!recolhida && <span>Recolher menu</span>}
           </button>
           <button
@@ -133,15 +152,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print sticky top-0 z-20 border-b bg-card/95 backdrop-blur">
+        <header className="no-print sticky top-0 z-20 border-b border-primary/15 bg-card/95 shadow-[0_2px_12px_rgba(26,65,34,0.06)] backdrop-blur">
+          <div className="h-1 bg-gradient-to-r from-primary via-success to-warning" />
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3">
             <div>
-              <h1 className="text-base font-semibold text-foreground">
+              <h1 className="text-base font-semibold text-primary">
                 Fluxo de Caixa Semanal — Grupo Otávio Lage
               </h1>
               <p className="text-xs text-muted-foreground">
-                Data-base {dataBR(filtros.dataBase)} · Horizonte {filtros.horizonte} semanas · Cenário{" "}
-                {cenario?.nome ?? "Base"}
+                Data-base {dataBR(filtros.dataBase)} · Horizonte {filtros.horizonte} semanas ·
+                Cenário {cenario?.nome ?? "Base"}
                 {lote?.publicado_em ? ` · Atualizado em ${dataHoraBR(lote.publicado_em)}` : ""}
               </p>
             </div>
