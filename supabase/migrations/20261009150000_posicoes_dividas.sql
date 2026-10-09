@@ -26,14 +26,18 @@ create index if not exists posicoes_dividas_data_base_idx on public.posicoes_div
 create index if not exists posicoes_dividas_tipo_idx on public.posicoes_dividas(tipo);
 
 alter table public.posicoes_dividas enable row level security;
+drop policy if exists "leitura autenticada" on public.posicoes_dividas;
+drop policy if exists "escrita editores" on public.posicoes_dividas;
+drop policy if exists "update editores" on public.posicoes_dividas;
+drop policy if exists "delete editores" on public.posicoes_dividas;
 create policy "leitura autenticada" on public.posicoes_dividas
   for select to authenticated using (true);
 create policy "escrita editores" on public.posicoes_dividas
-  for insert to authenticated with check (is_editor());
+  for insert to authenticated with check (public.is_editor());
 create policy "update editores" on public.posicoes_dividas
-  for update to authenticated using (is_editor()) with check (is_editor());
+  for update to authenticated using (public.is_editor()) with check (public.is_editor());
 create policy "delete editores" on public.posicoes_dividas
-  for delete to authenticated using (is_editor());
+  for delete to authenticated using (public.is_editor());
 
 grant select, insert, update, delete on public.posicoes_dividas to authenticated;
 grant all on public.posicoes_dividas to service_role;
