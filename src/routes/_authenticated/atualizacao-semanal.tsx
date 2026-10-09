@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresas, useLoteAtivo, useLotes } from "@/lib/dados";
 import { chaveEmpresa, nomeOficialEmpresa } from "@/lib/empresas";
@@ -270,7 +271,7 @@ function AtualizacaoSemanal() {
                   : (anteriorArquivo ?? null),
               ];
             }),
-          ),
+          ) as unknown as Json,
           totais,
           avisos: erros,
         })
