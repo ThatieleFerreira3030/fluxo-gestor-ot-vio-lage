@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Download } from "lucide-react";
+import { AlertTriangle, Download } from "lucide-react";
 import { FiltrosBar } from "@/components/FiltrosBar";
 import { Kpi } from "@/components/Kpi";
 import { Button } from "@/components/ui/button";
@@ -67,7 +67,13 @@ function Dividas() {
           .select("*")
           .order("data_base", { ascending: false })
           .range(inicio, inicio + 999);
-        if (error) throw error;
+        if (error) {
+          // A publicação do front-end pode terminar alguns instantes antes da
+          // migração do banco. Nesse intervalo, mantém a visão disponível com
+          // os contratos legados, em vez de derrubar toda a rota.
+          if (error.code === "42P01" || error.code === "PGRST205") return [];
+          throw error;
+        }
         const pagina = (data ?? []) as Posicao[];
         todas.push(...pagina);
         if (pagina.length < 1000) break;
@@ -199,6 +205,18 @@ function Dividas() {
         <Kpi titulo="Dívida com acionistas" valor={brl(acionistas, true)} />
         <Kpi titulo="Dívida líquida" valor={brl(liquida, true)} tom="negativo" />
       </div>
+      {posicoes.isError && (
+        <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">Os saldos contábeis ainda não puderam ser consultados.</p>
+            <p className="mt-1 text-xs">
+              A visão permanece disponível com os contratos já cadastrados. Tente novamente após a
+              atualização do banco ou importe novamente a planilha de amortização.
+            </p>
+          </div>
+        </div>
+      )}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="text-base">Resumo do endividamento</CardTitle>
