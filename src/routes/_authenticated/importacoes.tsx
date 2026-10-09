@@ -8,10 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresas } from "@/lib/dados";
+import { encontrarEmpresa } from "@/lib/empresas";
 import { TIPOS_FONTE, CATEGORIAS_ENTRADA } from "@/lib/constants";
 import { brl, dataHoraBR, iso, toDate } from "@/lib/format";
 
@@ -21,10 +28,14 @@ export const Route = createFileRoute("/_authenticated/importacoes")({
       { title: "Importações | Grupo Otávio Lage" },
       {
         name: "description",
-        content: "Importação de planilhas Excel de contas a pagar, receber, saldos e projeções de abate.",
+        content:
+          "Importação de planilhas Excel de contas a pagar, receber, saldos e projeções de abate.",
       },
       { property: "og:title", content: "Importações | Grupo Otávio Lage" },
-      { property: "og:description", content: "Carga de dados por planilha com mapeamento de colunas." },
+      {
+        property: "og:description",
+        content: "Carga de dados por planilha com mapeamento de colunas.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -132,15 +143,12 @@ function Importacoes() {
   const importar = async () => {
     if (!linhas.length) return;
     setEnviando(true);
-    const natureza = tipoFonte === "contas_a_receber" || tipoFonte === "projecao_abate" ? "entrada" : "saida";
+    const natureza =
+      tipoFonte === "contas_a_receber" || tipoFonte === "projecao_abate" ? "entrada" : "saida";
     const registros = linhas
       .map((l) => {
         const nomeEmpresa = String(l[mapa["empresa"] ?? ""] ?? "").trim();
-        const empresa = (empresas ?? []).find(
-          (e) =>
-            e.nome.toLowerCase() === nomeEmpresa.toLowerCase() ||
-            (e.apelido ?? "").toLowerCase() === nomeEmpresa.toLowerCase(),
-        );
+        const empresa = encontrarEmpresa(empresas ?? [], nomeEmpresa);
         const valor = normalizarValor(l[mapa["valor"] ?? ""]);
         return {
           empresa_id: empresa?.id ?? null,
@@ -230,7 +238,11 @@ function Importacoes() {
                     className="hidden"
                     onChange={(e) => e.target.files?.[0] && void aoSelecionar(e.target.files[0])}
                   />
-                  <Button variant="outline" className="w-full justify-start" onClick={() => inputRef.current?.click()}>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => inputRef.current?.click()}
+                  >
                     <Upload className="mr-2 h-4 w-4" />
                     {arquivo || "Selecionar planilha"}
                   </Button>
@@ -272,7 +284,9 @@ function Importacoes() {
                         <Label className="text-xs text-muted-foreground">{c.rotulo}</Label>
                         <Select
                           value={mapa[c.chave] ?? "__nenhuma"}
-                          onValueChange={(v) => setMapa({ ...mapa, [c.chave]: v === "__nenhuma" ? "" : v })}
+                          onValueChange={(v) =>
+                            setMapa({ ...mapa, [c.chave]: v === "__nenhuma" ? "" : v })
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="—" />
@@ -314,7 +328,9 @@ function Importacoes() {
                           <tr key={i} className="border-t">
                             {colunas.slice(0, 8).map((c) => (
                               <td key={c} className="p-2">
-                                {l[c] instanceof Date ? dataHoraBR(l[c] as Date) : String(l[c] ?? "")}
+                                {l[c] instanceof Date
+                                  ? dataHoraBR(l[c] as Date)
+                                  : String(l[c] ?? "")}
                               </td>
                             ))}
                           </tr>
