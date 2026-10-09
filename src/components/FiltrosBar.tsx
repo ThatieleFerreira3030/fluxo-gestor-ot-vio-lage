@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/command";
 import { HORIZONTES } from "@/lib/constants";
 import { useCenarios, useEmpresas, useFiltros } from "@/lib/dados";
+import { agruparEmpresas } from "@/lib/empresas";
 import { dataBR, inicioSemana } from "@/lib/format";
 import { montarSemanas } from "@/lib/fluxo";
 import { cn } from "@/lib/utils";
@@ -29,22 +30,25 @@ import { cn } from "@/lib/utils";
 function FiltroEmpresas() {
   const { filtros, setFiltros } = useFiltros();
   const { data: empresas } = useEmpresas();
-  const lista = empresas ?? [];
+  const lista = agruparEmpresas(empresas ?? []);
   const selecionadas = new Set(filtros.empresaIds);
 
-  const alternar = (id: string) => {
-    const novas = selecionadas.has(id)
-      ? filtros.empresaIds.filter((v) => v !== id)
-      : [...filtros.empresaIds, id];
+  const alternar = (ids: string[]) => {
+    const grupoSelecionado = ids.every((id) => selecionadas.has(id));
+    const idsDoGrupo = new Set(ids);
+    const semGrupo = filtros.empresaIds.filter((id) => !idsDoGrupo.has(id));
+    const novas = grupoSelecionado ? semGrupo : [...semGrupo, ...ids];
     setFiltros({ empresaIds: novas });
   };
+
+  const gruposSelecionados = lista.filter((grupo) => grupo.ids.some((id) => selecionadas.has(id)));
 
   const rotulo =
     filtros.empresaIds.length === 0
       ? "Todas as empresas"
-      : filtros.empresaIds.length === 1
-        ? (lista.find((e) => e.id === filtros.empresaIds[0])?.nome ?? "1 empresa")
-        : `${filtros.empresaIds.length} empresas selecionadas`;
+      : gruposSelecionados.length === 1
+        ? gruposSelecionados[0]!.nome
+        : `${gruposSelecionados.length} empresas selecionadas`;
 
   return (
     <Popover>
@@ -69,14 +73,17 @@ function FiltroEmpresas() {
                 />
                 Todas as empresas
               </CommandItem>
-              {lista.map((e) => (
-                <CommandItem key={e.id} value={e.nome} onSelect={() => alternar(e.id)}>
-                  <Check
-                    className={cn("h-4 w-4", selecionadas.has(e.id) ? "opacity-100" : "opacity-0")}
-                  />
-                  {e.nome}
-                </CommandItem>
-              ))}
+              {lista.map((e) => {
+                const grupoSelecionado = e.ids.every((id) => selecionadas.has(id));
+                return (
+                  <CommandItem key={e.chave} value={e.nome} onSelect={() => alternar(e.ids)}>
+                    <Check
+                      className={cn("h-4 w-4", grupoSelecionado ? "opacity-100" : "opacity-0")}
+                    />
+                    {e.nome}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -92,7 +99,10 @@ export function FiltrosBar() {
   const semanas = montarSemanas(filtros.dataBase, filtros.horizonte);
   const primeiraSemana = semanas[0];
   const fim = semanas.at(-1)?.fim;
-  const empresasSelecionadas = (empresas ?? []).filter((e) => filtros.empresaIds.includes(e.id));
+  const empresasAgrupadas = agruparEmpresas(empresas ?? []);
+  const empresasSelecionadas = empresasAgrupadas.filter((empresa) =>
+    empresa.ids.some((id) => filtros.empresaIds.includes(id)),
+  );
 
   return (
     <Card className="no-print mb-6 gap-0 p-4 shadow-panel">
@@ -151,11 +161,13 @@ export function FiltrosBar() {
         <div className="mt-3 flex flex-wrap gap-1.5">
           {empresasSelecionadas.map((e) => (
             <Badge
-              key={e.id}
+              key={e.chave}
               variant="secondary"
               className="cursor-pointer gap-1"
               onClick={() =>
-                setFiltros({ empresaIds: filtros.empresaIds.filter((id) => id !== e.id) })
+                setFiltros({
+                  empresaIds: filtros.empresaIds.filter((id) => !e.ids.includes(id)),
+                })
               }
             >
               {e.nome} ×
@@ -165,8 +177,9 @@ export function FiltrosBar() {
       )}
       <p className="mt-3 text-xs text-muted-foreground">
         Fechamento da data-base: {dataBR(inicioSemana(filtros.dataBase))} a{" "}
-        {dataBR(filtros.dataBase)}{" · "}primeira projeção: {dataBR(primeiraSemana?.inicio)} a{" "}
-        {dataBR(primeiraSemana?.fim)}{" · "}depois, semanas de sexta a quinta até {dataBR(fim)}
+        {dataBR(filtros.dataBase)}
+        {" · "}primeira projeção: {dataBR(primeiraSemana?.inicio)} a {dataBR(primeiraSemana?.fim)}
+        {" · "}depois, semanas de sexta a quinta até {dataBR(fim)}
       </p>
     </Card>
   );
