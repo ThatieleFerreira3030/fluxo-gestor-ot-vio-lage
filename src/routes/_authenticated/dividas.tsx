@@ -74,7 +74,7 @@ function Dividas() {
           if (error.code === "42P01" || error.code === "PGRST205") return [];
           throw error;
         }
-        const pagina = (data ?? []) as Posicao[];
+        const pagina = (data ?? []) as unknown as Posicao[];
         todas.push(...pagina);
         if (pagina.length < 1000) break;
       }

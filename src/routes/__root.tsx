@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -36,12 +37,13 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
+  const erro = error instanceof Error ? error : new Error(String(error));
+  console.error(erro);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+    reportLovableError(erro, { boundary: "tanstack_root_error_component" });
+  }, [erro]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -53,7 +55,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           Tente novamente. Se continuar, informe ao time a mensagem abaixo.
         </p>
         <p className="mt-3 break-words rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-          {error?.message || "Erro desconhecido"}
+          {erro.message || "Erro desconhecido"}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button

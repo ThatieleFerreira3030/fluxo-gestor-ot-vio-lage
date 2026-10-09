@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresas, useLoteAtivo, useLotes } from "@/lib/dados";
 import { chaveEmpresa, nomeOficialEmpresa } from "@/lib/empresas";
@@ -58,7 +59,7 @@ const mensagemErro = (erro: unknown) => {
   if (erro instanceof Error) return erro.message;
   if (erro && typeof erro === "object") {
     const e = erro as Record<string, unknown>;
-    const partes = [e.message, e.details, e.hint, e.code]
+    const partes = [e["message"], e["details"], e["hint"], e["code"]]
       .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
       .map((v) => v.trim());
     if (partes.length) return [...new Set(partes)].join(" · ");
@@ -270,7 +271,7 @@ function AtualizacaoSemanal() {
                   : (anteriorArquivo ?? null),
               ];
             }),
-          ),
+          ) as unknown as Json,
           totais,
           avisos: erros,
         })
@@ -323,10 +324,10 @@ function AtualizacaoSemanal() {
           linhasMov.push(
             ...registros.map((registro) => {
               const campos = { ...registro };
-              delete campos.id;
-              delete campos.created_at;
-              delete campos.updated_at;
-              delete campos.lote_id;
+              delete campos["id"];
+              delete campos["created_at"];
+              delete campos["updated_at"];
+              delete campos["lote_id"];
               return { ...campos, lote_id: loteId };
             }),
           );
@@ -383,7 +384,7 @@ function AtualizacaoSemanal() {
           outras_safras: d.outrasSafras,
           fonte: "Saldos atuais",
         }));
-        const { error } = await supabase.from("posicoes_dividas").upsert(linhasDividas, {
+        const { error } = await supabase.from("posicoes_dividas").upsert(linhasDividas as never, {
           onConflict: "data_base,chave_origem",
         });
         if (error) throw new Error(`Falha ao gravar a aba Saldos atuais: ${mensagemErro(error)}`);
