@@ -667,6 +667,90 @@ export type Database = {
         }
         Relationships: []
       }
+      posicoes_dividas: {
+        Row: {
+          chave_origem: string | null
+          created_at: string
+          credor: string
+          data_base: string
+          empresa_id: string | null
+          fonte: string | null
+          id: string
+          indexador: string | null
+          lote_id: string | null
+          modalidade: string | null
+          numero_contrato: string | null
+          outras_safras: number
+          parcelas_restantes: number | null
+          safra_1: number
+          safra_2: number
+          safra_3: number
+          saldo_contabil_aproximado: number
+          taxa: string | null
+          tipo: string
+          vencimento: string | null
+        }
+        Insert: {
+          chave_origem?: string | null
+          created_at?: string
+          credor: string
+          data_base: string
+          empresa_id?: string | null
+          fonte?: string | null
+          id?: string
+          indexador?: string | null
+          lote_id?: string | null
+          modalidade?: string | null
+          numero_contrato?: string | null
+          outras_safras?: number
+          parcelas_restantes?: number | null
+          safra_1?: number
+          safra_2?: number
+          safra_3?: number
+          saldo_contabil_aproximado?: number
+          taxa?: string | null
+          tipo?: string
+          vencimento?: string | null
+        }
+        Update: {
+          chave_origem?: string | null
+          created_at?: string
+          credor?: string
+          data_base?: string
+          empresa_id?: string | null
+          fonte?: string | null
+          id?: string
+          indexador?: string | null
+          lote_id?: string | null
+          modalidade?: string | null
+          numero_contrato?: string | null
+          outras_safras?: number
+          parcelas_restantes?: number | null
+          safra_1?: number
+          safra_2?: number
+          safra_3?: number
+          saldo_contabil_aproximado?: number
+          taxa?: string | null
+          tipo?: string
+          vencimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posicoes_dividas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posicoes_dividas_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "lotes_importacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
