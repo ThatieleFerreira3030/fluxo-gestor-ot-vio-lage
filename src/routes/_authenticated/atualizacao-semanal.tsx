@@ -54,6 +54,18 @@ const HORIZONTE = 13;
 
 type Leituras = Partial<Record<FonteId, LeituraFonte>>;
 
+const mensagemErro = (erro: unknown) => {
+  if (erro instanceof Error) return erro.message;
+  if (erro && typeof erro === "object") {
+    const e = erro as Record<string, unknown>;
+    const partes = [e.message, e.details, e.hint, e.code]
+      .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+      .map((v) => v.trim());
+    if (partes.length) return [...new Set(partes)].join(" · ");
+  }
+  return typeof erro === "string" && erro.trim() ? erro : "erro sem detalhes retornados pelo banco";
+};
+
 function AtualizacaoSemanal() {
   const { podeEditar, user } = useAuth();
   const qc = useQueryClient();
@@ -374,12 +386,12 @@ function AtualizacaoSemanal() {
         const { error } = await supabase.from("posicoes_dividas").upsert(linhasDividas, {
           onConflict: "data_base,chave_origem",
         });
-        if (error) throw error;
+        if (error) throw new Error(`Falha ao gravar a aba Saldos atuais: ${mensagemErro(error)}`);
       }
 
       // 6. Troca atômica da versão ativa.
       const { error: ePub } = await supabase.rpc("publicar_lote", { _lote: loteId });
-      if (ePub) throw ePub;
+      if (ePub) throw new Error(`Falha ao ativar a nova versão: ${mensagemErro(ePub)}`);
 
       toast.success(`Versão ${numero} publicada. O fluxo já usa apenas estas planilhas.`);
       setLeituras({});
@@ -389,7 +401,8 @@ function AtualizacaoSemanal() {
       if (loteId) await supabase.from("lotes_importacao").delete().eq("id", loteId);
       toast.error(
         "Publicação cancelada, a versão anterior continua ativa: " +
-          (e instanceof Error ? e.message : "erro desconhecido"),
+          mensagemErro(e),
+        { duration: 15000 },
       );
     } finally {
       setPublicando(false);
