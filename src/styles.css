@@ -6,8 +6,8 @@
 
 /*
  * Design system — Fluxo de Caixa Semanal | Grupo Otávio Lage
- * Paleta corporativa: azul-marinho, verde (entradas), vermelho (saídas),
- * âmbar (pendências/estimativas), fundo cinza muito claro.
+ * Identidade institucional extraída do material oficial do Grupo Otávio Lage:
+ * verde profundo, laranja, verde-petróleo e marfim.
  */
 
 @theme inline {
@@ -56,50 +56,50 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-card: 0 1px 2px oklch(0.2 0.05 255 / 0.06), 0 8px 24px oklch(0.2 0.05 255 / 0.06);
-  --shadow-panel: 0 2px 4px oklch(0.2 0.05 255 / 0.05);
+  --shadow-card: 0 1px 2px rgb(26 65 34 / 0.06), 0 10px 28px rgb(26 65 34 / 0.07);
+  --shadow-panel: 0 2px 6px rgb(26 65 34 / 0.06);
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.981 0.003 250);
-  --foreground: oklch(0.24 0.035 258);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.035 258);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.035 258);
-  --primary: oklch(0.32 0.075 258);
-  --primary-foreground: oklch(0.985 0.005 250);
-  --secondary: oklch(0.955 0.008 250);
-  --secondary-foreground: oklch(0.32 0.075 258);
-  --muted: oklch(0.962 0.006 250);
-  --muted-foreground: oklch(0.52 0.02 256);
-  --accent: oklch(0.93 0.03 250);
-  --accent-foreground: oklch(0.3 0.07 258);
-  --destructive: oklch(0.53 0.19 26);
-  --destructive-foreground: oklch(0.985 0.005 250);
-  --success: oklch(0.52 0.13 155);
-  --success-foreground: oklch(0.985 0.005 250);
-  --warning: oklch(0.72 0.15 72);
-  --warning-foreground: oklch(0.24 0.035 258);
-  --info: oklch(0.55 0.11 245);
-  --info-foreground: oklch(0.985 0.005 250);
-  --border: oklch(0.9 0.008 250);
-  --input: oklch(0.9 0.008 250);
-  --ring: oklch(0.45 0.08 258);
-  --chart-1: oklch(0.32 0.075 258);
-  --chart-2: oklch(0.52 0.13 155);
-  --chart-3: oklch(0.53 0.19 26);
-  --chart-4: oklch(0.72 0.15 72);
-  --chart-5: oklch(0.55 0.11 245);
-  --sidebar: oklch(0.28 0.065 258);
-  --sidebar-foreground: oklch(0.93 0.012 250);
-  --sidebar-primary: oklch(0.62 0.13 210);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.35 0.07 258);
-  --sidebar-accent-foreground: oklch(0.985 0.005 250);
-  --sidebar-border: oklch(0.36 0.055 258);
-  --sidebar-ring: oklch(0.62 0.13 210);
+  --radius: 0.625rem;
+  --background: #fbf7ef;
+  --foreground: #1a4122;
+  --card: #fffdf8;
+  --card-foreground: #1a4122;
+  --popover: #fffdf8;
+  --popover-foreground: #1a4122;
+  --primary: #1a4122;
+  --primary-foreground: #fffaf1;
+  --secondary: #f7efe2;
+  --secondary-foreground: #1a4122;
+  --muted: #f3ecdf;
+  --muted-foreground: #667469;
+  --accent: #ffe7cc;
+  --accent-foreground: #7a3900;
+  --destructive: #b23b2f;
+  --destructive-foreground: #fffaf1;
+  --success: #03877a;
+  --success-foreground: #fffaf1;
+  --warning: #f57900;
+  --warning-foreground: #3f2200;
+  --info: #236b62;
+  --info-foreground: #fffaf1;
+  --border: #dfd5c3;
+  --input: #d8cdbb;
+  --ring: #f57900;
+  --chart-1: #1a4122;
+  --chart-2: #03877a;
+  --chart-3: #f57900;
+  --chart-4: #85a33a;
+  --chart-5: #b99b65;
+  --sidebar: #15391e;
+  --sidebar-foreground: #f7efe2;
+  --sidebar-primary: #f57900;
+  --sidebar-primary-foreground: #fffaf1;
+  --sidebar-accent: #265431;
+  --sidebar-accent-foreground: #fffaf1;
+  --sidebar-border: #35613e;
+  --sidebar-ring: #f57900;
 }
 
 .dark {
@@ -145,6 +145,7 @@
 
   body {
     background-color: var(--color-background);
+    background-image: linear-gradient(135deg, rgb(245 121 0 / 0.025), transparent 34%);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -154,6 +155,22 @@
   h2,
   h3 {
     letter-spacing: -0.015em;
+    color: var(--primary);
+  }
+
+  ::selection {
+    background: rgb(245 121 0 / 0.22);
+  }
+}
+
+@layer components {
+  [data-slot="card"] {
+    border-color: color-mix(in srgb, var(--border) 82%, var(--primary));
+  }
+
+  [data-slot="table-header"] {
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 }
 
