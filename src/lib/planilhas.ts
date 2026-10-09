@@ -48,24 +48,6 @@ export type LinhaMovimento = {
 
 export type ResumoAba = { aba: string; registros: number; ignorados: number; total: number };
 
-export type LinhaDivida = {
-  chave: string;
-  empresa: string | null;
-  tipo: "bancaria" | "tributaria" | "acionistas" | "outras";
-  credor: string;
-  modalidade: string;
-  contrato: string | null;
-  saldoContabil: number;
-  indexador: string | null;
-  taxa: string | null;
-  vencimento: string | null;
-  parcelasRestantes: number | null;
-  safra1: number;
-  safra2: number;
-  safra3: number;
-  outrasSafras: number;
-};
-
 export type LeituraFonte = {
   fonte: FonteId;
   arquivo: string;
@@ -73,7 +55,6 @@ export type LeituraFonte = {
   dataBase: string | null;
   disponibilidades: LinhaDisponibilidade[];
   movimentos: LinhaMovimento[];
-  dividas?: LinhaDivida[];
   resumoAbas: ResumoAba[];
   ignorados: number;
   erros: string[];
@@ -142,7 +123,8 @@ export const dataCelula = (v: unknown): string | null => {
   if (dataExtensa) {
     const [, dia, nomeMes, ano] = dataExtensa;
     const mes = mesesPt[nomeMes ?? ""];
-    if (mes) return `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+    if (mes)
+      return `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0") }`;
   }
   const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if (br) {
@@ -167,8 +149,7 @@ const statusDaSituacao = (s: string): LinhaMovimento["status"] => {
   const v = semAcento(s);
   if (v.includes("recebido") || v.includes("pago") || v.includes("realizado")) return "realizado";
   if (v.includes("previsao") || v.includes("provisao") || v.includes("estimad")) return "estimado";
-  if (v.includes("faturado") || v.includes("agendado") || v.includes("escalado"))
-    return "confirmado";
+  if (v.includes("faturado") || v.includes("agendado") || v.includes("escalado")) return "confirmado";
   return v ? "confirmado" : "estimado";
 };
 
@@ -338,7 +319,9 @@ const lerAbaSimples = (
 
   if (iValor < 0 || iData < 0) {
     // Abas informativas ("Sem Provisão para o periodo") não são erro.
-    const aviso = linhas.flat().some((c) => semAcento(txt(c)).includes("sem provisao"));
+    const aviso = linhas
+      .flat()
+      .some((c) => semAcento(txt(c)).includes("sem provisao"));
     if (!aviso) erros.push(`Aba "${nome}": colunas obrigatórias não localizadas.`);
     return {
       movimentos: [],
@@ -361,8 +344,11 @@ const lerAbaSimples = (
       if (k) detalhe[k] = r[i] instanceof Date ? dataCelula(r[i]) : (r[i] ?? null);
     });
     const situacao = txt(r[col("Situação", "Situacao")] ?? "");
-    const contraparte = txt(r[col(...(cfg.colContraparte ?? ["Destino", "Mercado"]))] ?? "");
-    const descricao = txt(r[col(...(cfg.colDescricao ?? []))] ?? "") || cfg.categoria;
+    const contraparte = txt(
+      r[col(...(cfg.colContraparte ?? ["Destino", "Mercado"]))] ?? "",
+    );
+    const descricao =
+      txt(r[col(...(cfg.colDescricao ?? []))] ?? "") || cfg.categoria;
     const empresa = txt(r[col(...(cfg.colEmpresa ?? []))] ?? "") || null;
     const documento = txt(r[col(...(cfg.colDocumento ?? []))] ?? "");
     movimentos.push({
@@ -370,7 +356,8 @@ const lerAbaSimples = (
       aba: nome,
       natureza: cfg.natureza,
       categoria: cfg.categoria,
-      subcategoria: txt(r[col(...(cfg.colCategoria ?? ["Categoria"]))] ?? "") || null,
+      subcategoria:
+        txt(r[col(...(cfg.colCategoria ?? ["Categoria"]))] ?? "") || null,
       descricao,
       contraparte,
       documento,
@@ -812,73 +799,6 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
     });
   });
 
-  // "Saldos atuais" é a fonte oficial do endividamento. O Cronograma permanece
-  // apenas como provisão dos pagamentos futuros.
-  const nomeSaldos = acharAba(wb, "Saldos atuais");
-  const dividas: LinhaDivida[] = [];
-  if (!nomeSaldos) {
-    erros.push('Aba "Saldos atuais" não encontrada para atualizar o endividamento.');
-  } else {
-    const linhasSaldos = matriz(wb.Sheets[nomeSaldos]!);
-    const indiceCabecalho = linhasSaldos.findIndex((linha) =>
-      linha.some((celula) => semAcento(txt(celula)).includes("saldo contabil aproximado")),
-    );
-    if (indiceCabecalho < 0) {
-      erros.push('Coluna "Saldo contábil aproximado" não localizada na aba "Saldos atuais".');
-    } else {
-      const colSaldo = colunas(linhasSaldos[indiceCabecalho] ?? []);
-      const iSaldo = colSaldo("Saldo contábil aproximado", "Saldo contabil aproximado");
-      const iTipo = colSaldo("Tipo");
-      const iIdSaldo = colSaldo("ID", "Contrato", "Número contrato", "Numero contrato");
-      const iEmpresaSaldo = colSaldo("Empresa");
-      const iCredorSaldo = colSaldo("Credor", "Banco", "Instituição", "Instituicao");
-      const iModalidade = colSaldo("Modalidade", "Objeto parcelamento", "Operação", "Operacao");
-      const iIndexador = colSaldo("Indexador");
-      const iTaxa = colSaldo("Taxa");
-      const iVencimentoSaldo = colSaldo("Vencimento");
-      const iParcelas = colSaldo("Parcelas restantes");
-      const colunasSafra = (linhasSaldos[indiceCabecalho] ?? [])
-        .map((valor, indice) => ({ valor: semAcento(txt(valor)), indice }))
-        .filter((item) => item.valor.includes("safra"));
-
-      for (const r of linhasSaldos.slice(indiceCabecalho + 1)) {
-        if (linhaVazia(r)) continue;
-        const saldo = numero(r[iSaldo]);
-        const credor = txt(r[iCredorSaldo]);
-        const modalidade = txt(r[iModalidade]);
-        if (saldo === null || (!credor && !modalidade)) continue;
-        const tipoTexto = semAcento(txt(r[iTipo]));
-        const tipo: LinhaDivida["tipo"] = tipoTexto.includes("tribut")
-          ? "tributaria"
-          : tipoTexto.includes("acion")
-            ? "acionistas"
-            : tipoTexto.includes("banc") || !tipoTexto
-              ? "bancaria"
-              : "outras";
-        const contrato = txt(r[iIdSaldo]) || null;
-        const empresa = txt(r[iEmpresaSaldo]) || null;
-        const chave = [tipo, contrato, empresa, credor, modalidade].filter(Boolean).join("|");
-        dividas.push({
-          chave,
-          empresa,
-          tipo,
-          credor: credor || modalidade || "Não informado",
-          modalidade: modalidade || "Não informada",
-          contrato,
-          saldoContabil: Math.abs(saldo),
-          indexador: txt(r[iIndexador]) || null,
-          taxa: txt(r[iTaxa]) || null,
-          vencimento: dataCelula(r[iVencimentoSaldo]),
-          parcelasRestantes: numero(r[iParcelas]),
-          safra1: numero(r[colunasSafra[0]?.indice ?? -1]) ?? 0,
-          safra2: numero(r[colunasSafra[1]?.indice ?? -1]) ?? 0,
-          safra3: numero(r[colunasSafra[2]?.indice ?? -1]) ?? 0,
-          outrasSafras: numero(r[colunasSafra[3]?.indice ?? -1]) ?? 0,
-        });
-      }
-    }
-  }
-
   return {
     fonte: "amortizacoes",
     arquivo,
@@ -886,7 +806,6 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
     dataBase: null,
     disponibilidades: [],
     movimentos,
-    dividas,
     resumoAbas: [
       {
         aba: nome,
