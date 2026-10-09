@@ -97,7 +97,7 @@ function Dividas() {
   const todas = (posicoes.data ?? []).filter((p) => !p.empresa_id || ids.has(p.empresa_id));
   const dataBase = todas[0]?.data_base ?? null;
   const atuais = todas.filter((p) => p.data_base === dataBase);
-  const lista: Posicao[] = atuais.length
+  const listaBase: Posicao[] = atuais.length
     ? atuais
     : (legados.data ?? [])
         .filter((c) => !c.empresa_id || ids.has(c.empresa_id))
@@ -119,11 +119,12 @@ function Dividas() {
           safra_3: 0,
           outras_safras: 0,
         }));
+  // A dívida com acionistas foi encerrada e permanece apenas no histórico do banco.
+  const lista = listaBase.filter((p) => p.tipo !== "acionistas");
   const soma = (l: Posicao[]) => l.reduce((a, p) => a + Number(p.saldo_contabil_aproximado), 0);
   const total = soma(lista),
     bancaria = soma(lista.filter((p) => p.tipo === "bancaria"));
   const tributaria = soma(lista.filter((p) => p.tipo === "tributaria"));
-  const acionistas = soma(lista.filter((p) => p.tipo === "acionistas"));
   const quotas = disponibilidades
     .filter((d) => d.tipo.toLowerCase().includes("quota"))
     .reduce((a, d) => a + Number(d.saldo), 0);
@@ -198,11 +199,10 @@ function Dividas() {
           <Download className="mr-1.5 h-4 w-4" /> Excel
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Kpi titulo="Dívida total bruta" valor={brl(total, true)} tom="negativo" />
         <Kpi titulo="Dívida bancária" valor={brl(bancaria, true)} tom="negativo" />
         <Kpi titulo="Dívida tributária" valor={brl(tributaria, true)} tom="alerta" />
-        <Kpi titulo="Dívida com acionistas" valor={brl(acionistas, true)} />
         <Kpi titulo="Dívida líquida" valor={brl(liquida, true)} tom="negativo" />
       </div>
       {posicoes.isError && (
