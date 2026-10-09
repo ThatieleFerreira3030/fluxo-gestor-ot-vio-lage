@@ -56,13 +56,11 @@ const TIPO_LABEL: Record<string, string> = {
   poupanca: "Poupança",
 };
 
-
 function Disponibilidades() {
   const { disponibilidades, empresas, carregando } = useFluxo();
   const { podeEditar } = useAuth();
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
-  const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
   const [filtroBanco, setFiltroBanco] = useState("todos");
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [ordenacaoSaldo, setOrdenacaoSaldo] = useState<"desc" | "asc">("desc");
@@ -82,7 +80,10 @@ function Disponibilidades() {
 
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
   const bancos = useMemo(
-    () => [...new Set(disponibilidades.map((d) => nomeBanco(d.banco)))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    () =>
+      [...new Set(disponibilidades.map((d) => nomeBanco(d.banco)))].sort((a, b) =>
+        a.localeCompare(b, "pt-BR"),
+      ),
     [disponibilidades],
   );
   const tipos = useMemo(
@@ -92,7 +93,6 @@ function Disponibilidades() {
   const disponibilidadesFiltradas = useMemo(
     () =>
       disponibilidades
-        .filter((d) => filtroEmpresa === "todas" || d.empresa_id === filtroEmpresa)
         .filter((d) => filtroBanco === "todos" || nomeBanco(d.banco) === filtroBanco)
         .filter((d) => filtroTipo === "todos" || tipoChave(d.tipo) === filtroTipo)
         .sort((a, b) =>
@@ -100,7 +100,7 @@ function Disponibilidades() {
             ? Number(b.saldo) - Number(a.saldo)
             : Number(a.saldo) - Number(b.saldo),
         ),
-    [disponibilidades, filtroEmpresa, filtroBanco, filtroTipo, ordenacaoSaldo],
+    [disponibilidades, filtroBanco, filtroTipo, ordenacaoSaldo],
   );
   const quotas = disponibilidadesFiltradas.filter((d) => tipoChave(d.tipo) === "quotas");
   const semQuotas = disponibilidadesFiltradas.filter((d) => tipoChave(d.tipo) !== "quotas");
@@ -183,23 +183,7 @@ function Disponibilidades() {
       </div>
 
       <Card className="mb-4 p-4">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Empresa</Label>
-            <Select value={filtroEmpresa} onValueChange={setFiltroEmpresa}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as empresas</SelectItem>
-                {empresas.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Banco</Label>
             <Select value={filtroBanco} onValueChange={setFiltroBanco}>
