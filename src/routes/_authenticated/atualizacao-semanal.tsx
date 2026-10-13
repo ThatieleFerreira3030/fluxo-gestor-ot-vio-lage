@@ -382,6 +382,8 @@ function AtualizacaoSemanal() {
           safra_2: d.safra2,
           safra_3: d.safra3,
           outras_safras: d.outrasSafras,
+          curto_prazo: d.curtoPrazo ?? 0,
+          longo_prazo: d.longoPrazo ?? 0,
           fonte: "Saldos atuais",
         }));
         const { error } = await supabase.from("posicoes_dividas").upsert(linhasDividas as never, {
@@ -400,11 +402,9 @@ function AtualizacaoSemanal() {
       await qc.invalidateQueries();
     } catch (e) {
       if (loteId) await supabase.from("lotes_importacao").delete().eq("id", loteId);
-      toast.error(
-        "Publicação cancelada, a versão anterior continua ativa: " +
-          mensagemErro(e),
-        { duration: 15000 },
-      );
+      toast.error("Publicação cancelada, a versão anterior continua ativa: " + mensagemErro(e), {
+        duration: 15000,
+      });
     } finally {
       setPublicando(false);
     }

@@ -64,6 +64,35 @@ export type LinhaDivida = {
   safra2: number;
   safra3: number;
   outrasSafras: number;
+  curtoPrazo?: number;
+  longoPrazo?: number;
+};
+
+export type ResumoEndividamento = {
+  dataBase: string;
+  dividaBancaria: number;
+  dividaTributaria: number;
+  dividaBruta: number;
+  curtoPrazo: number;
+  longoPrazo: number;
+  quotasCapital: number;
+  disponibilidades: number;
+  dividaLiquida: number;
+};
+
+export type ParcelaCronogramaEndividamento = {
+  periodo: string;
+  ordem: number;
+  valor: number;
+};
+
+export type LeituraEndividamentoMensal = {
+  arquivo: string;
+  dataBase: string;
+  posicoes: LinhaDivida[];
+  resumos: ResumoEndividamento[];
+  cronograma: ParcelaCronogramaEndividamento[];
+  avisos: string[];
 };
 
 export type LeituraFonte = {
@@ -921,6 +950,223 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
     total: movimentos.reduce((a, m) => a + m.valor, 0),
     enviadoEm: new Date().toISOString(),
   };
+};
+
+/* ------------------------- Endividamento mensal -------------------------- */
+
+const indiceLinha = (linhas: unknown[][], termo: string, inicio = 0) =>
+  linhas.findIndex(
+    (linha, indice) =>
+      indice >= inicio && linha.some((celula) => semAcento(txt(celula)).includes(semAcento(termo))),
+  );
+
+const valorNaLinha = (linha: unknown[] | undefined, colunaPreferida: number) => {
+  if (!linha) return 0;
+  const preferido = numero(linha[colunaPreferida]);
+  if (preferido !== null) return Math.abs(preferido);
+  for (let i = linha.length - 1; i >= 0; i--) {
+    const n = numero(linha[i]);
+    if (n !== null) return Math.abs(n);
+  }
+  return 0;
+};
+
+/**
+ * Lê a planilha mensal usada na apresentação de endividamento.
+ * A validação por títulos evita aceitar silenciosamente outro arquivo com abas
+ * de nomes semelhantes e posições diferentes.
+ */
+export const lerEndividamentoMensal = async (file: File): Promise<LeituraEndividamentoMensal> => {
+  // Mantém datas como seriais do Excel para evitar deslocamento de fuso horário
+  // na data-base de fechamento mensal.
+  const wb = XLSX.read(await file.arrayBuffer(), { cellDates: false });
+  const nomeResumo = acharAba(wb, "Endividamento 1");
+  const nomeCronograma = acharAba(wb, "Endividamento 2");
+  const nomeInstituicoes = acharAba(wb, "Endividamento 3");
+  if (!nomeResumo || !nomeCronograma || !nomeInstituicoes) {
+    throw new Error(
+      'A planilha mensal deve conter as abas "Endividamento 1", "Endividamento 2" e "Endividamento 3".',
+    );
+  }
+
+  const resumo = matriz(wb.Sheets[nomeResumo]!);
+  const inst = matriz(wb.Sheets[nomeInstituicoes]!);
+  const crono = matriz(wb.Sheets[nomeCronograma]!);
+  const avisos: string[] = [];
+
+  const linhaResumoGeral = resumo.reduce(
+    (ultimo, linha, indice) =>
+      linha.some((c) => semAcento(txt(c)).includes("resumo geral")) ? indice : ultimo,
+    -1,
+  );
+  if (linhaResumoGeral < 0)
+    throw new Error('Bloco "Resumo geral" não localizado na aba Endividamento 1.');
+
+  const linhaDatas = resumo[linhaResumoGeral + 1] ?? [];
+  const datas = linhaDatas
+    .map((v, coluna) => ({ data: dataCelula(v), coluna }))
+    .filter((x): x is { data: string; coluna: number } => !!x.data)
+    .sort((a, b) => b.data.localeCompare(a.data));
+  if (!datas.length) throw new Error("Data-base não localizada no bloco Resumo geral.");
+  const atual = datas[0]!;
+  const anterior = datas[1] ?? null;
+
+  const acharApos = (termo: string, inicio: number) => {
+    const relativo = indiceLinha(resumo.slice(inicio), termo);
+    return relativo < 0 ? -1 : inicio + relativo;
+  };
+  const linhaTotal = acharApos("divida total", linhaResumoGeral);
+  const linhaQuotas = acharApos("quotas", linhaResumoGeral);
+  const linhaDisponiveis = acharApos("saldo em c/c", linhaResumoGeral);
+  const linhaLiquida = acharApos("divida liquida atual", linhaResumoGeral);
+  if ([linhaTotal, linhaQuotas, linhaDisponiveis, linhaLiquida].some((i) => i < 0)) {
+    throw new Error(
+      "O Resumo geral não contém dívida total, quotas, disponibilidades e dívida líquida.",
+    );
+  }
+
+  const linhaBancaria = resumo.reduce(
+    (ultimo, linha, indice) =>
+      linha.some((c) => semAcento(txt(c)).includes("dividas de emprestimos e financiamentos"))
+        ? indice
+        : ultimo,
+    -1,
+  );
+  const linhaTributaria = indiceLinha(resumo, "dividas tributarias");
+  if (linhaBancaria < 0 || linhaTributaria < 0) {
+    throw new Error("Os blocos de dívida bancária e tributária não foram localizados.");
+  }
+  const totalDepois = (inicio: number) => {
+    const rel = resumo
+      .slice(inicio + 1)
+      .findIndex((linha) => linha.some((c) => semAcento(txt(c)) === "total"));
+    return rel < 0 ? -1 : inicio + 1 + rel;
+  };
+  const linhaTotalBancaria = totalDepois(linhaBancaria);
+  const linhaTotalTributaria = totalDepois(linhaTributaria);
+
+  const cabInst = inst.reduce((ultimo, linha, indice) => {
+    const textos = linha.map((c) => semAcento(txt(c)));
+    return textos.includes("credor") &&
+      textos.includes("saldo devedor") &&
+      textos.includes("curto prazo")
+      ? indice
+      : ultimo;
+  }, -1);
+  if (cabInst < 0) throw new Error("Tabela por instituição não localizada na aba Endividamento 3.");
+  const colInst = colunas(inst[cabInst] ?? []);
+  const iCredor = colInst("Credor");
+  const iSaldo = colInst("Saldo Devedor");
+  const iCurto = colInst("Curto Prazo");
+  const iLongo = colInst("Longo Prazo");
+  const posicoes: LinhaDivida[] = [];
+  for (const linha of inst.slice(cabInst + 1)) {
+    const credor = txt(linha[iCredor]);
+    if (!credor || semAcento(credor) === "total") break;
+    const saldo = numero(linha[iSaldo]);
+    if (saldo === null || saldo <= 0) continue;
+    const curto = Math.abs(numero(linha[iCurto]) ?? 0);
+    const longo = Math.abs(numero(linha[iLongo]) ?? Math.max(0, saldo - curto));
+    posicoes.push({
+      chave: `bancaria|${semAcento(credor)}`,
+      empresa: null,
+      tipo: "bancaria",
+      credor,
+      modalidade: "Endividamento bancário",
+      contrato: null,
+      saldoContabil: Math.abs(saldo),
+      indexador: null,
+      taxa: null,
+      vencimento: null,
+      parcelasRestantes: null,
+      safra1: 0,
+      safra2: 0,
+      safra3: 0,
+      outrasSafras: 0,
+      curtoPrazo: curto,
+      longoPrazo: longo,
+    });
+  }
+
+  const blocoTrib = resumo.slice(linhaTributaria, linhaResumoGeral);
+  const curtoTribRel = indiceLinha(blocoTrib, "curto prazo");
+  const longoTribRel = indiceLinha(blocoTrib, "longo prazo");
+  const curtoTrib = curtoTribRel < 0 ? 0 : valorNaLinha(blocoTrib[curtoTribRel], atual.coluna);
+  const longoTrib = longoTribRel < 0 ? 0 : valorNaLinha(blocoTrib[longoTribRel], atual.coluna);
+  const totalTrib = valorNaLinha(resumo[linhaTotalTributaria], atual.coluna);
+  if (totalTrib > 0) {
+    posicoes.push({
+      chave: "tributaria|parcelamentos",
+      empresa: null,
+      tipo: "tributaria",
+      credor: "Parcelamentos tributários",
+      modalidade: "Dívida tributária",
+      contrato: null,
+      saldoContabil: totalTrib,
+      indexador: null,
+      taxa: null,
+      vencimento: null,
+      parcelasRestantes: null,
+      safra1: 0,
+      safra2: 0,
+      safra3: 0,
+      outrasSafras: 0,
+      curtoPrazo: curtoTrib,
+      longoPrazo: longoTrib,
+    });
+  }
+
+  const resumoNaData = (data: { data: string; coluna: number }): ResumoEndividamento => {
+    const bancaria = valorNaLinha(resumo[linhaTotalBancaria], data.coluna);
+    const tributaria = valorNaLinha(resumo[linhaTotalTributaria], data.coluna);
+    const brutaPlanilha = valorNaLinha(resumo[linhaTotal], data.coluna);
+    const quotas = valorNaLinha(resumo[linhaQuotas], data.coluna);
+    const disponibilidades = valorNaLinha(resumo[linhaDisponiveis], data.coluna);
+    const liquidaPlanilha = valorNaLinha(resumo[linhaLiquida], data.coluna);
+    // A dívida com acionistas foi encerrada e não integra mais esta visão.
+    const bruta = bancaria + tributaria;
+    const liquida = bruta - quotas - disponibilidades;
+    if (Math.abs(brutaPlanilha - bruta) > 1 || Math.abs(liquidaPlanilha - liquida) > 1) {
+      avisos.push(`A dívida com acionistas foi desconsiderada nos totais de ${data.data}.`);
+    }
+    return {
+      dataBase: data.data,
+      dividaBancaria: bancaria,
+      dividaTributaria: tributaria,
+      dividaBruta: bruta,
+      curtoPrazo:
+        data.data === atual.data ? posicoes.reduce((a, p) => a + (p.curtoPrazo ?? 0), 0) : 0,
+      longoPrazo:
+        data.data === atual.data ? posicoes.reduce((a, p) => a + (p.longoPrazo ?? 0), 0) : 0,
+      quotasCapital: quotas,
+      disponibilidades,
+      dividaLiquida: liquida,
+    };
+  };
+  const resumos = [resumoNaData(atual), ...(anterior ? [resumoNaData(anterior)] : [])];
+
+  const linhaCabCrono = crono.findIndex((linha) => linha.some((c) => semAcento(txt(c)) === "disp"));
+  if (linhaCabCrono < 0)
+    throw new Error("Cronograma por safra não localizado na aba Endividamento 2.");
+  const linhaValoresCrono = crono[linhaCabCrono + 1] ?? [];
+  const cronograma: ParcelaCronogramaEndividamento[] = [];
+  (crono[linhaCabCrono] ?? []).forEach((cabecalho, coluna) => {
+    const periodo = txt(cabecalho);
+    if (!periodo || semAcento(periodo) === "disp") return;
+    // A aba gráfica apresenta o cronograma em milhões de reais.
+    const valor = Math.abs(numero(linhaValoresCrono[coluna]) ?? 0) * 1_000_000;
+    if (valor > 0) cronograma.push({ periodo, ordem: coluna, valor });
+  });
+
+  const somaPosicoes = posicoes.reduce((a, p) => a + p.saldoContabil, 0);
+  const divergencia = Math.abs(somaPosicoes - resumos[0]!.dividaBruta);
+  if (divergencia > 1) {
+    avisos.push(`A abertura difere do total bruto em ${divergencia.toFixed(2)}.`);
+  }
+  if (!cronograma.length)
+    avisos.push("Nenhum valor futuro foi localizado no cronograma por safra.");
+
+  return { arquivo: file.name, dataBase: atual.data, posicoes, resumos, cronograma, avisos };
 };
 
 /* ---------------------------------- leitura -------------------------------- */
