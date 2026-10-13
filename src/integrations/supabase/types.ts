@@ -222,6 +222,36 @@ export type Database = {
           },
         ]
       }
+      cronograma_endividamento: {
+        Row: {
+          created_at: string
+          data_base: string
+          fonte: string
+          id: string
+          ordem: number
+          periodo: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_base: string
+          fonte?: string
+          id?: string
+          ordem?: number
+          periodo: string
+          valor?: number
+        }
+        Update: {
+          created_at?: string
+          data_base?: string
+          fonte?: string
+          id?: string
+          ordem?: number
+          periodo?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       disponibilidades: {
         Row: {
           agencia: string | null
@@ -672,11 +702,13 @@ export type Database = {
           chave_origem: string | null
           created_at: string
           credor: string
+          curto_prazo: number
           data_base: string
           empresa_id: string | null
           fonte: string | null
           id: string
           indexador: string | null
+          longo_prazo: number
           lote_id: string | null
           modalidade: string | null
           numero_contrato: string | null
@@ -694,11 +726,13 @@ export type Database = {
           chave_origem?: string | null
           created_at?: string
           credor: string
+          curto_prazo?: number
           data_base: string
           empresa_id?: string | null
           fonte?: string | null
           id?: string
           indexador?: string | null
+          longo_prazo?: number
           lote_id?: string | null
           modalidade?: string | null
           numero_contrato?: string | null
@@ -716,11 +750,13 @@ export type Database = {
           chave_origem?: string | null
           created_at?: string
           credor?: string
+          curto_prazo?: number
           data_base?: string
           empresa_id?: string | null
           fonte?: string | null
           id?: string
           indexador?: string | null
+          longo_prazo?: number
           lote_id?: string | null
           modalidade?: string | null
           numero_contrato?: string | null
@@ -886,6 +922,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      resumos_endividamento: {
+        Row: {
+          atualizado_em: string
+          curto_prazo: number
+          data_base: string
+          disponibilidades: number
+          divida_bancaria: number
+          divida_bruta: number
+          divida_liquida: number
+          divida_tributaria: number
+          fonte: string
+          id: string
+          longo_prazo: number
+          quotas_capital: number
+        }
+        Insert: {
+          atualizado_em?: string
+          curto_prazo?: number
+          data_base: string
+          disponibilidades?: number
+          divida_bancaria?: number
+          divida_bruta?: number
+          divida_liquida?: number
+          divida_tributaria?: number
+          fonte?: string
+          id?: string
+          longo_prazo?: number
+          quotas_capital?: number
+        }
+        Update: {
+          atualizado_em?: string
+          curto_prazo?: number
+          data_base?: string
+          disponibilidades?: number
+          divida_bancaria?: number
+          divida_bruta?: number
+          divida_liquida?: number
+          divida_tributaria?: number
+          fonte?: string
+          id?: string
+          longo_prazo?: number
+          quotas_capital?: number
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
