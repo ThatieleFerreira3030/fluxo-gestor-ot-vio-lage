@@ -6,8 +6,6 @@ import {
   BarChart,
   CartesianGrid,
   Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -296,24 +294,6 @@ function Dividas() {
   )
     .map(([instituicao, valores]) => ({ instituicao, ...valores }))
     .sort((a, b) => b.Saldo - a.Saldo);
-  const historico = resumos.data?.length
-    ? resumos.data.map((r) => ({
-        data: r.data_base,
-        rotulo: dataBR(r.data_base),
-        bruta: Number(r.divida_bruta),
-        liquida: Number(r.divida_liquida),
-      }))
-    : Object.entries(
-        todas.reduce<Record<string, number>>(
-          (a, p) => ({
-            ...a,
-            [p.data_base]: (a[p.data_base] ?? 0) + Number(p.saldo_contabil_aproximado),
-          }),
-          {},
-        ),
-      )
-        .map(([data, valor]) => ({ data, rotulo: dataBR(data), bruta: valor, liquida: valor }))
-        .sort((a, b) => a.data.localeCompare(b.data));
   const ano = dataBase ? Number(dataBase.slice(0, 4)) : new Date().getFullYear();
   const cronogramaImportado = (cronogramas.data ?? []).filter((c) => c.data_base === dataBase);
   const cronograma = cronogramaImportado.length
@@ -482,25 +462,7 @@ function Dividas() {
           </CardContent>
         </Card>
       </div>
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Evolução da dívida bruta</CardTitle>
-          </CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historico}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="rotulo" tick={{ fontSize: 10 }} />
-                <YAxis tickFormatter={(v) => brl(Number(v), true)} />
-                <Tooltip formatter={(v) => brl(Number(v))} />
-                <Legend />
-                <Line dataKey="bruta" name="Dívida bruta" stroke="#ee7d24" strokeWidth={3} />
-                <Line dataKey="liquida" name="Dívida líquida" stroke="#1f6b57" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <div className="mt-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Cronograma por safra</CardTitle>
