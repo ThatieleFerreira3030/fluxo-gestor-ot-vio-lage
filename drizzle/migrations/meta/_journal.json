@@ -8,6 +8,13 @@
       "when": 1791575455786,
       "tag": "0000_create_posicoes_dividas",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791922749168,
+      "tag": "0001_endividamento_mensal",
+      "breakpoints": true
     }
   ]
 }
