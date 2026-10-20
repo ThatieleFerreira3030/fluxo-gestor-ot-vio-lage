@@ -149,6 +149,17 @@ const chaveCredor = (valor: string) => {
   return chave.replace(/[^a-z0-9]/g, "");
 };
 
+const chaveInstituicaoPagamento = (valor: string) => {
+  const normalizado = valor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  const emissaoCra = normalizado.match(/\bcra\s*(\d+)/)?.[1];
+  if (emissaoCra && (normalizado.includes("eco") || normalizado.includes("cra")))
+    return `ecoagro-cra-${emissaoCra}`;
+  return chaveCredor(valor);
+};
+
 function Dividas() {
   const { podeEditar } = useAuth();
   const arquivoRef = useRef<HTMLInputElement>(null);
@@ -644,7 +655,8 @@ function Dividas() {
     ? parcelasFuturas.filter(
         (parcela) =>
           !!parcela.contraparte &&
-          chaveCredor(parcela.contraparte) === chaveCredor(instituicaoSelecionada),
+          chaveInstituicaoPagamento(parcela.contraparte) ===
+            chaveInstituicaoPagamento(instituicaoSelecionada),
       )
     : [];
   const totalAmortizacaoInstituicao = parcelasDaInstituicao.reduce(
@@ -1124,7 +1136,7 @@ function Dividas() {
             <BarChart data={instituicoes} layout="vertical" margin={{ left: 60 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" tickFormatter={(v) => brl(Number(v), true)} />
-              <YAxis type="category" dataKey="instituicao" width={150} />
+              <YAxis type="category" dataKey="instituicao" width={180} interval={0} />
               <Tooltip formatter={(v) => brl(Number(v))} />
               <Legend />
               <Bar
