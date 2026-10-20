@@ -86,8 +86,9 @@ type ParcelaAmortizacao = {
 };
 
 const periodoSafra = (data: string) => {
-  const [ano, mes] = data.split("-").map(Number);
-  const inicio = mes >= 7 ? ano : ano - 1;
+  const ano = Number(data.slice(0, 4));
+  const mes = Number(data.slice(5, 7));
+  const inicio = mes >= 4 ? ano : ano - 1;
   return `${String(inicio).slice(-2)}/${String(inicio + 1).slice(-2)}`;
 };
 
