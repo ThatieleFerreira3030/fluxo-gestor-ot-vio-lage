@@ -781,6 +781,8 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
   const iTotal = col("Pagamento total");
   const iSaldoFim = col("Saldo final");
   const iFonte = col("Fonte");
+  const iCdi = col("CDI");
+  const iIpca = col("IPCA");
 
   if ([iVenc, iTotal].some((i) => i < 0))
     erros.push("Colunas Vencimento e/ou Pagamento total não localizadas na aba Cronograma.");
@@ -879,6 +881,31 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
       const colunasSafra = (linhasSaldos[indiceCabecalho] ?? [])
         .map((valor, indice) => ({ valor: semAcento(txt(valor)), indice }))
         .filter((item) => item.valor.includes("safra"));
+      const taxaIndexadorNaDataBase = (indexador: string, dataBase: string | null) => {
+        const indiceNormalizado = semAcento(indexador);
+        const coluna =
+          indiceNormalizado.includes("cdi") ? iCdi : indiceNormalizado.includes("ipca") ? iIpca : -1;
+        if (coluna < 0) return null;
+        const premissas = linhas
+          .slice(4)
+          .map((linha) => ({
+            data: dataCelula(linha[iVenc]),
+            taxa: numero(linha[coluna]),
+          }))
+          .filter(
+            (item): item is { data: string; taxa: number } =>
+              !!item.data && item.taxa !== null && (!dataBase || item.data >= dataBase),
+          )
+          .sort((a, b) => a.data.localeCompare(b.data));
+        const taxa = premissas[0]?.taxa;
+        if (taxa === undefined) return null;
+        return Math.abs(taxa) > 1 ? taxa / 100 : taxa;
+      };
+      const percentualAnual = (taxa: number) =>
+        `${(taxa * 100).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 4,
+        })}% a.a.`;
 
       for (const r of linhasSaldos.slice(indiceCabecalho + 1)) {
         if (linhaVazia(r)) continue;
@@ -910,15 +937,38 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
           .map((movimento) => movimento.data)
           .sort()
           .at(-1);
+        const indexador = txt(r[iIndexador]) || null;
         const taxaBruta = r[iTaxa];
         const taxaNumero = numero(taxaBruta);
-        const taxa =
-          taxaNumero !== null && typeof taxaBruta === "number"
-            ? `${(Math.abs(taxaNumero) <= 1 ? taxaNumero * 100 : taxaNumero).toLocaleString(
-                "pt-BR",
-                { minimumFractionDigits: 2, maximumFractionDigits: 4 },
-              )}% a.a.`
+        const spreadAnual =
+          taxaNumero !== null
+            ? Math.abs(taxaNumero) > 1
+              ? taxaNumero / 100
+              : taxaNumero
+            : null;
+        const taxaContratual =
+          spreadAnual !== null && typeof taxaBruta === "number"
+            ? percentualAnual(spreadAnual)
             : txt(taxaBruta) || null;
+        const taxaIndice = indexador
+          ? taxaIndexadorNaDataBase(indexador, dataBaseSaldo)
+          : null;
+        const taxaEfetiva =
+          spreadAnual !== null
+            ? taxaIndice !== null
+              ? (1 + taxaIndice) * (1 + spreadAnual) - 1
+              : spreadAnual
+            : null;
+        const taxa =
+          taxaContratual && taxaEfetiva !== null
+            ? [
+                taxaContratual,
+                taxaIndice !== null ? `índice ${percentualAnual(taxaIndice)}` : null,
+                `efetiva ${percentualAnual(taxaEfetiva)}`,
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : taxaContratual;
         const chave = [tipo, contrato, empresa, credor, modalidade].filter(Boolean).join("|");
         dividas.push({
           chave,
@@ -928,7 +978,7 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
           modalidade: modalidade || txt(r[iTipo]) || "Não informada",
           contrato,
           saldoContabil: Math.abs(saldo),
-          indexador: txt(r[iIndexador]) || null,
+          indexador,
           taxa,
           vencimento: dataCelula(r[iVencimentoSaldo]) ?? vencimentoCalculado ?? null,
           parcelasRestantes: numero(r[iParcelas]) ?? parcelasContrato.length,
