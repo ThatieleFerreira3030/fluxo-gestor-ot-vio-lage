@@ -17,7 +17,7 @@ export const perguntarDividas = createServerFn({ method: "POST" })
       .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
       .slice(-12)
       .map((m) => ({ role: m.role, content: m.content.slice(0, 4000) }));
-    if (!mensagens.length || mensagens[mensagens.length - 1].role !== "user")
+    if (!mensagens.length || mensagens[mensagens.length - 1]?.role !== "user")
       throw new Error("Envie uma pergunta.");
     return { mensagens };
   })
