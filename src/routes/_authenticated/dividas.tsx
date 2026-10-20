@@ -417,7 +417,10 @@ function Dividas() {
           chave_origem: c.id,
         }));
   // A dívida com acionistas foi encerrada e permanece apenas no histórico do banco.
-  const lista = listaBase.filter((p) => p.tipo !== "acionistas");
+  const prioridadeTipo: Record<string, number> = { bancaria: 0, tributaria: 1, outras: 2 };
+  const lista = listaBase
+    .filter((p) => p.tipo !== "acionistas")
+    .sort((a, b) => (prioridadeTipo[a.tipo] ?? 99) - (prioridadeTipo[b.tipo] ?? 99));
   const soma = (l: Posicao[]) => l.reduce((a, p) => a + Number(p.saldo_contabil_aproximado), 0);
   const bancaria = resumoAtual?.divida_bancaria ?? soma(lista.filter((p) => p.tipo === "bancaria"));
   const tributaria =
