@@ -16,6 +16,13 @@ import { toast } from "sonner";
 import { Kpi } from "@/components/Kpi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useFluxo } from "@/lib/dados";
@@ -66,6 +73,23 @@ type Resumo = {
 };
 
 type Cronograma = { data_base: string; periodo: string; ordem: number; valor: number };
+
+type ParcelaAmortizacao = {
+  id: string;
+  empresa_id: string | null;
+  contraparte: string | null;
+  documento: string | null;
+  descricao: string | null;
+  data_prevista: string;
+  valor_liquido: number;
+  detalhe: Record<string, unknown> | null;
+};
+
+const periodoSafra = (data: string) => {
+  const [ano, mes] = data.split("-").map(Number);
+  const inicio = mes >= 7 ? ano : ano - 1;
+  return `${String(inicio).slice(-2)}/${String(inicio + 1).slice(-2)}`;
+};
 
 const rotuloTipo = (tipo: string) =>
   tipo === "tributaria"
@@ -130,6 +154,7 @@ function Dividas() {
   const detalhesRef = useRef<HTMLInputElement>(null);
   const [importando, setImportando] = useState(false);
   const [importandoDetalhes, setImportandoDetalhes] = useState(false);
+  const [periodoSelecionado, setPeriodoSelecionado] = useState<string | null>(null);
   const { empresas, disponibilidades } = useFluxo();
   const posicoes = useQuery({
     queryKey: ["posicoes-dividas"],
@@ -181,6 +206,20 @@ function Dividas() {
         throw error;
       }
       return (data ?? []) as Cronograma[];
+    },
+  });
+  const parcelasCronograma = useQuery({
+    queryKey: ["parcelas-cronograma-dividas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("movimentacoes")
+        .select(
+          "id,empresa_id,contraparte,documento,descricao,data_prevista,valor_liquido,detalhe",
+        )
+        .eq("fonte", "cronograma-amortizacoes")
+        .order("data_prevista", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as ParcelaAmortizacao[];
     },
   });
   const legados = useQuery({
@@ -381,8 +420,39 @@ function Dividas() {
         if (erroLimpeza) throw erroLimpeza;
       }
 
-      await posicoes.refetch();
-      toast.success(`Detalhes contratuais de ${dataBR(dataBaseOficial)} atualizados com sucesso.`);
+      const { error: erroLimpezaParcelas } = await supabase
+        .from("movimentacoes")
+        .delete()
+        .eq("fonte", "cronograma-amortizacoes");
+      if (erroLimpezaParcelas) throw erroLimpezaParcelas;
+
+      if (leitura.movimentos.length) {
+        const { error: erroParcelas } = await supabase.from("movimentacoes").insert(
+          leitura.movimentos.map((movimento) => ({
+            empresa_id: movimento.empresa
+              ? (encontrarEmpresa(empresas, movimento.empresa)?.id ?? null)
+              : null,
+            natureza: "saida" as const,
+            categoria: movimento.categoria,
+            subcategoria: movimento.subcategoria,
+            descricao: movimento.descricao,
+            contraparte: movimento.contraparte,
+            documento: movimento.documento,
+            data_prevista: movimento.data,
+            data_vencimento: movimento.data,
+            valor_original: movimento.valor,
+            valor_liquido: movimento.valor,
+            status: "estimado" as const,
+            fonte: "cronograma-amortizacoes",
+            chave_origem: movimento.chave,
+            detalhe: movimento.detalhe,
+          })),
+        );
+        if (erroParcelas) throw erroParcelas;
+      }
+
+      await Promise.all([posicoes.refetch(), parcelasCronograma.refetch()]);
+      toast.success(`Detalhes contratuais e cronograma de ${dataBR(dataBaseOficial)} atualizados com sucesso.`);
       if (enriquecidos.length < detalhes.length)
         toast.warning(
           `${detalhes.length - enriquecidos.length} contrato(s) não tinham credor correspondente na planilha de saldos.`,
@@ -543,6 +613,31 @@ function Dividas() {
         ordem,
         valor: lista.reduce((a, p) => a + Number(p[campo as keyof Posicao] ?? 0), 0),
       }));
+  const parcelasFuturas = (parcelasCronograma.data ?? []).filter(
+    (parcela) => !dataBase || parcela.data_prevista > dataBase,
+  );
+  const parcelasDoPeriodo = periodoSelecionado
+    ? parcelasFuturas.filter((parcela) => {
+        const periodo = periodoSafra(parcela.data_prevista);
+        if (!periodoSelecionado.endsWith("+")) return periodo === periodoSelecionado;
+        const inicioSelecionado = Number(periodoSelecionado.slice(0, 2));
+        return Number(periodo.slice(0, 2)) >= inicioSelecionado;
+      })
+    : [];
+  const cronogramaSelecionado = cronograma.find((item) => item.periodo === periodoSelecionado);
+  const valorDetalhe = (parcela: ParcelaAmortizacao, campo: string) => {
+    const valor = parcela.detalhe?.[campo];
+    return typeof valor === "number" ? valor : Number(valor ?? 0);
+  };
+  const totalAmortizacaoPeriodo = parcelasDoPeriodo.reduce(
+    (soma, parcela) => soma + valorDetalhe(parcela, "Amortização"),
+    0,
+  );
+  const abrirDetalheCronograma = (entrada: unknown) => {
+    const item = entrada as { periodo?: string; payload?: { periodo?: string } };
+    const periodo = item.periodo ?? item.payload?.periodo;
+    if (periodo) setPeriodoSelecionado(periodo);
+  };
   const variacaoLiquida =
     resumoAnterior && Number(resumoAnterior.divida_liquida) !== 0
       ? (liquida / Number(resumoAnterior.divida_liquida) - 1) * 100
@@ -924,12 +1019,80 @@ function Dividas() {
                 <XAxis dataKey="periodo" />
                 <YAxis tickFormatter={(v) => brl(Number(v), true)} />
                 <Tooltip formatter={(v) => brl(Number(v))} />
-                <Bar dataKey="valor" name="Amortização" fill="#ee7d24" />
+                <Bar
+                  dataKey="valor"
+                  name="Amortização"
+                  fill="#ee7d24"
+                  className="cursor-pointer"
+                  onClick={abrirDetalheCronograma}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+      <Dialog
+        open={!!periodoSelecionado}
+        onOpenChange={(aberto) => !aberto && setPeriodoSelecionado(null)}
+      >
+        <DialogContent className="max-h-[88vh] max-w-6xl overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Amortizações da safra {periodoSelecionado}</DialogTitle>
+            <DialogDescription>
+              {parcelasDoPeriodo.length} {parcelasDoPeriodo.length === 1 ? "parcela" : "parcelas"} ·
+              Amortização detalhada {brl(totalAmortizacaoPeriodo)} · Total consolidado do gráfico{" "}
+              {cronogramaSelecionado ? brl(Number(cronogramaSelecionado.valor)) : "—"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-auto rounded-md border">
+            <table className="w-full min-w-[1050px] text-sm">
+              <thead className="sticky top-0 bg-muted">
+                <tr className="text-left">
+                  <th className="p-2 font-medium">Vencimento</th>
+                  <th className="p-2 font-medium">Empresa</th>
+                  <th className="p-2 font-medium">Credor</th>
+                  <th className="p-2 font-medium">Contrato</th>
+                  <th className="p-2 font-medium">Evento</th>
+                  <th className="p-2 text-right font-medium">Juros</th>
+                  <th className="p-2 text-right font-medium">Amortização</th>
+                  <th className="p-2 text-right font-medium">Pagamento total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {parcelasDoPeriodo.map((parcela) => (
+                  <tr key={parcela.id} className="border-t">
+                    <td className="p-2">{dataBR(parcela.data_prevista)}</td>
+                    <td className="p-2">{nomeEmpresa(parcela.empresa_id)}</td>
+                    <td className="p-2">{parcela.contraparte ?? "—"}</td>
+                    <td className="p-2">{parcela.documento ?? "—"}</td>
+                    <td className="p-2">{parcela.descricao ?? "—"}</td>
+                    <td className="num p-2 text-right">
+                      {brl(valorDetalhe(parcela, "Juros / remuneração"))}
+                    </td>
+                    <td className="num p-2 text-right text-orange-700">
+                      {brl(valorDetalhe(parcela, "Amortização"))}
+                    </td>
+                    <td className="num p-2 text-right font-semibold text-destructive">
+                      {brl(Number(parcela.valor_liquido))}
+                    </td>
+                  </tr>
+                ))}
+                {!parcelasDoPeriodo.length && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                      Reimporte a planilha de detalhes para carregar as parcelas desta safra.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A barra mantém o total consolidado da planilha “Endividamento - Gráficos”. A listagem
+            utiliza as parcelas da aba “Cronograma Cronológico” da planilha de amortização.
+          </p>
+        </DialogContent>
+      </Dialog>
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="text-base">Endividamento bancário por instituição</CardTitle>
