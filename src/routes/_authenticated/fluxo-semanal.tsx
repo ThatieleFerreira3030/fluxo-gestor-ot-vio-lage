@@ -237,11 +237,6 @@ function FluxoSemanal() {
                 </Fragment>
               ))}
               <Totais
-                rotulo="Disponibilidade antes dos pagamentos"
-                valores={fluxo.resultados.map((r) => r.disponibilidadeAntesPagamentos)}
-                total={fluxo.saldoInicial + fluxo.totalEntradas}
-              />
-              <Totais
                 rotulo="Geração líquida da semana"
                 valores={fluxo.resultados.map((r) => r.liquido)}
                 total={fluxo.totalEntradas - fluxo.totalSaidas}
