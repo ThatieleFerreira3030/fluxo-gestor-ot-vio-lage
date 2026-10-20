@@ -78,13 +78,21 @@ function FluxoSemanal() {
     valores,
     total,
     destaque,
+    separador,
   }: {
     rotulo: string;
     valores: number[];
     total: number;
     destaque?: "positivo" | "negativo" | "forte";
+    separador?: "secao" | "totais";
   }) => (
-    <tr className="border-t bg-muted/60 font-semibold">
+    <tr
+      className={cn(
+        "border-t bg-muted/60 font-semibold",
+        separador === "secao" && "border-b-2 border-b-primary/30",
+        separador === "totais" && "border-t-4 border-t-primary/40",
+      )}
+    >
       <td className="sticky left-0 z-10 bg-muted/95 p-2 text-sm">{rotulo}</td>
       {valores.map((v, i) => (
         <td
@@ -185,7 +193,7 @@ function FluxoSemanal() {
               />
               {(["entradas", "pagamentos", "amortizacoes"] as const).map((g) => (
                 <Fragment key={g}>
-                  <tr className="bg-secondary">
+                  <tr className="border-t-2 border-t-primary/30 bg-secondary">
                     <td
                       colSpan={fluxo.semanas.length + 2}
                       className="p-2 text-xs font-semibold uppercase tracking-wide text-secondary-foreground"
@@ -233,6 +241,7 @@ function FluxoSemanal() {
                           : fluxo.totalAmortizacoes
                     }
                     destaque={g === "entradas" ? "positivo" : "negativo"}
+                    separador="secao"
                   />
                 </Fragment>
               ))}
@@ -240,6 +249,7 @@ function FluxoSemanal() {
                 rotulo="Geração líquida da semana"
                 valores={fluxo.resultados.map((r) => r.liquido)}
                 total={fluxo.totalEntradas - fluxo.totalSaidas}
+                separador="totais"
               />
               <Totais
                 rotulo="Saldo final"
