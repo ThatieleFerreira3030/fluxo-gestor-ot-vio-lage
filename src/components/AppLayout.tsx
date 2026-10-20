@@ -1,4 +1,4 @@
-import { Fragment, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -108,42 +108,31 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {NAV.filter((item) => ehAdmin || !item.somenteAdmin).map((item) => {
             const ativo = item.to === "/" ? rota === "/" : rota.startsWith(item.to);
             const Icone = item.icone;
-            const primeiroAdmin =
-              item.somenteAdmin && NAV.find((opcao) => opcao.somenteAdmin)?.to === item.to;
             return (
-              <Fragment key={item.to}>
-                {primeiroAdmin && !recolhida && (
-                  <div className="mt-3 flex items-center gap-2 border-t border-sidebar-border px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-primary">
-                    <LockKeyhole className="h-3 w-3" />
-                    Acesso administrativo
-                  </div>
+              <Link
+                key={item.to}
+                to={item.to}
+                title={`${item.rotulo}${item.somenteAdmin ? " — somente administrador" : ""}`}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  ativo
+                    ? "border-l-2 border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-sm"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
                 )}
-                <Link
-                  to={item.to}
-                  title={`${item.rotulo}${item.somenteAdmin ? " — somente administrador" : ""}`}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                    ativo
-                      ? "border-l-2 border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-sm"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
-                  )}
-                >
-                  <Icone className="h-4 w-4 shrink-0" />
-                  {!recolhida && (
-                    <>
-                      <span className="min-w-0 flex-1 truncate">{item.rotulo}</span>
-                      {item.somenteAdmin && (
-                        <Badge
-                          variant="outline"
-                          className="shrink-0 border-sidebar-primary/50 px-1.5 py-0 text-[9px] text-sidebar-primary"
-                        >
-                          Admin
-                        </Badge>
-                      )}
-                    </>
-                  )}
-                </Link>
-              </Fragment>
+              >
+                <Icone className="h-4 w-4 shrink-0" />
+                {!recolhida && (
+                  <>
+                    <span className="min-w-0 flex-1 truncate">{item.rotulo}</span>
+                    {item.somenteAdmin && (
+                      <LockKeyhole
+                        className="h-3.5 w-3.5 shrink-0 text-sidebar-primary"
+                        aria-label="Somente administrador"
+                      />
+                    )}
+                  </>
+                )}
+              </Link>
             );
           })}
           <Link
