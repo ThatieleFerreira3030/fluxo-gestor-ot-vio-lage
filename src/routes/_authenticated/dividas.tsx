@@ -22,7 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFluxo } from "@/lib/dados";
 import { brl, dataBR, num } from "@/lib/format";
 import { exportarExcel } from "@/lib/exportar";
-import { lerEndividamentoMensal } from "@/lib/planilhas";
+import { lerArquivo, lerEndividamentoMensal, type LinhaDivida } from "@/lib/planilhas";
+import { encontrarEmpresa } from "@/lib/empresas";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/_authenticated/dividas")({
@@ -49,6 +50,8 @@ type Posicao = {
   outras_safras: number;
   curto_prazo: number;
   longo_prazo: number;
+  fonte: string;
+  chave_origem: string;
 };
 
 type Resumo = {
@@ -74,10 +77,30 @@ const rotuloTipo = (tipo: string) =>
         ? "Bancária"
         : "Outras";
 
+const chaveCredor = (valor: string) => {
+  const chave = valor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  if (chave.includes("eco") || chave.includes("cra")) return "ecoagro";
+  if (chave.includes("votorantim") || chave.includes("banco bv")) return "bv";
+  if (chave.includes("btg")) return "btg";
+  if (chave.includes("amazonia") || chave.includes("basa")) return "basa";
+  if (chave.includes("bradesco")) return "bradesco";
+  if (chave.includes("brasil")) return "bb";
+  if (chave.includes("sicredi")) return "sicredi";
+  if (chave.includes("sicoob")) return "sicoob";
+  if (chave.includes("safra")) return "safra";
+  if (chave.includes("agrolend")) return "agrolend";
+  return chave.replace(/[^a-z0-9]/g, "");
+};
+
 function Dividas() {
   const { podeEditar } = useAuth();
   const arquivoRef = useRef<HTMLInputElement>(null);
+  const detalhesRef = useRef<HTMLInputElement>(null);
   const [importando, setImportando] = useState(false);
+  const [importandoDetalhes, setImportandoDetalhes] = useState(false);
   const { empresas, empresasFiltradas, disponibilidades } = useFluxo();
   const posicoes = useQuery({
     queryKey: ["posicoes-dividas"],
@@ -223,14 +246,152 @@ function Dividas() {
     }
   };
 
+  const importarDetalhes = async (file: File | undefined) => {
+    if (!file) return;
+    setImportandoDetalhes(true);
+    try {
+      const leitura = await lerArquivo(file, null);
+      if (leitura.fonte !== "amortizacoes")
+        throw new Error('Selecione a planilha "Amortização de dívidas bancárias".');
+      if (leitura.erros.length) throw new Error(leitura.erros.join(" "));
+      if (!leitura.dataBase || !leitura.dividas?.length)
+        throw new Error('Não foram encontrados os dados da aba "Saldos Atuais".');
+
+      const dataBaseOficial = resumos.data?.at(-1)?.data_base;
+      if (!dataBaseOficial)
+        throw new Error('Importe primeiro a planilha "Endividamento - Gráficos".');
+      if (leitura.dataBase !== dataBaseOficial)
+        throw new Error(
+          `As planilhas têm datas-base diferentes: ${dataBR(leitura.dataBase)} e ${dataBR(
+            dataBaseOficial,
+          )}.`,
+        );
+
+      const oficiais = (posicoes.data ?? []).filter(
+        (p) => p.data_base === dataBaseOficial && p.fonte === "Endividamento mensal",
+      );
+      if (!oficiais.length)
+        throw new Error(
+          'Importe novamente a planilha "Endividamento - Gráficos" antes dos detalhes.',
+        );
+
+      const detalhes = leitura.dividas.filter((d) => d.tipo !== "acionistas");
+      const totalGrupo = (item: LinhaDivida) =>
+        detalhes
+          .filter((d) =>
+            item.tipo === "tributaria"
+              ? d.tipo === "tributaria"
+              : d.tipo === "bancaria" && chaveCredor(d.credor) === chaveCredor(item.credor),
+          )
+          .reduce((soma, d) => soma + d.saldoContabil, 0);
+      const oficialDoDetalhe = (item: LinhaDivida) =>
+        item.tipo === "tributaria"
+          ? oficiais.find((p) => p.tipo === "tributaria")
+          : oficiais.find(
+              (p) => p.tipo === "bancaria" && chaveCredor(p.credor) === chaveCredor(item.credor),
+            );
+
+      const enriquecidos = detalhes
+        .map((d) => {
+          const oficial = oficialDoDetalhe(d);
+          const baseGrupo = totalGrupo(d);
+          if (!oficial || baseGrupo <= 0) return null;
+          const proporcao = d.saldoContabil / baseGrupo;
+          return {
+            d,
+            saldo: Number(oficial.saldo_contabil_aproximado) * proporcao,
+            curto: Number(oficial.curto_prazo ?? 0) * proporcao,
+            longo: Number(oficial.longo_prazo ?? 0) * proporcao,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => !!item);
+
+      if (!enriquecidos.length)
+        throw new Error("Os credores das duas planilhas não puderam ser relacionados.");
+
+      const { error } = await supabase.from("posicoes_dividas").upsert(
+        enriquecidos.map(({ d, saldo, curto, longo }) => ({
+          data_base: dataBaseOficial,
+          empresa_id: d.empresa ? (encontrarEmpresa(empresas, d.empresa)?.id ?? null) : null,
+          chave_origem: d.chave,
+          tipo: d.tipo,
+          credor: d.credor,
+          modalidade: d.modalidade,
+          numero_contrato: d.contrato,
+          saldo_contabil_aproximado: saldo,
+          indexador: d.indexador,
+          taxa: d.taxa,
+          vencimento: d.vencimento,
+          parcelas_restantes: d.parcelasRestantes,
+          safra_1: 0,
+          safra_2: 0,
+          safra_3: 0,
+          outras_safras: 0,
+          curto_prazo: curto,
+          longo_prazo: longo,
+          fonte: "Saldos atuais",
+        })),
+        { onConflict: "data_base,chave_origem" },
+      );
+      if (error) throw error;
+
+      const chavesNovas = new Set(enriquecidos.map(({ d }) => d.chave));
+      const idsObsoletos = (posicoes.data ?? [])
+        .filter(
+          (p) =>
+            p.data_base === dataBaseOficial &&
+            p.fonte === "Saldos atuais" &&
+            !chavesNovas.has(p.chave_origem),
+        )
+        .map((p) => p.id);
+      if (idsObsoletos.length) {
+        const { error: erroLimpeza } = await supabase
+          .from("posicoes_dividas")
+          .delete()
+          .in("id", idsObsoletos);
+        if (erroLimpeza) throw erroLimpeza;
+      }
+
+      await posicoes.refetch();
+      toast.success(`Detalhes contratuais de ${dataBR(dataBaseOficial)} atualizados com sucesso.`);
+      if (enriquecidos.length < detalhes.length)
+        toast.warning(
+          `${detalhes.length - enriquecidos.length} contrato(s) não tinham credor correspondente na planilha de saldos.`,
+        );
+    } catch (e) {
+      const erro = e as { message?: string; details?: string; code?: string };
+      toast.error(
+        `Não foi possível importar os detalhes: ${
+          [erro.message, erro.details, erro.code].filter(Boolean).join(" · ") || "erro desconhecido"
+        }`,
+        { duration: 15000 },
+      );
+    } finally {
+      setImportandoDetalhes(false);
+      if (detalhesRef.current) detalhesRef.current.value = "";
+    }
+  };
+
   const ids = new Set(empresasFiltradas.map((e) => e.id));
   const todas = (posicoes.data ?? []).filter((p) => !p.empresa_id || ids.has(p.empresa_id));
   const resumoAtual = resumos.data?.at(-1) ?? null;
   const resumoAnterior = resumos.data?.at(-2) ?? null;
   const dataBase = resumoAtual?.data_base ?? todas[0]?.data_base ?? null;
   const atuais = todas.filter((p) => p.data_base === dataBase);
+  const atuaisSemFiltro = (posicoes.data ?? []).filter((p) => p.data_base === dataBase);
+  const detalhesAtuais = atuais.filter((p) => p.fonte === "Saldos atuais");
+  const detalhesSemFiltro = atuaisSemFiltro.filter((p) => p.fonte === "Saldos atuais");
+  const oficiaisAtuais = atuais.filter((p) => p.fonte === "Endividamento mensal");
+  const agregadoTemDetalhe = (agregado: Posicao) =>
+    agregado.tipo === "tributaria"
+      ? detalhesSemFiltro.some((p) => p.tipo === "tributaria")
+      : detalhesSemFiltro.some(
+          (p) => p.tipo === "bancaria" && chaveCredor(p.credor) === chaveCredor(agregado.credor),
+        );
   const listaBase: Posicao[] = atuais.length
-    ? atuais
+    ? detalhesAtuais.length
+      ? [...detalhesAtuais, ...oficiaisAtuais.filter((p) => !agregadoTemDetalhe(p))]
+      : atuais
     : (legados.data ?? [])
         .filter((c) => !c.empresa_id || ids.has(c.empresa_id))
         .map((c) => ({
@@ -252,6 +413,8 @@ function Dividas() {
           outras_safras: 0,
           curto_prazo: 0,
           longo_prazo: 0,
+          fonte: "Contratos cadastrados",
+          chave_origem: c.id,
         }));
   // A dívida com acionistas foi encerrada e permanece apenas no histórico do banco.
   const lista = listaBase.filter((p) => p.tipo !== "acionistas");
@@ -277,8 +440,13 @@ function Dividas() {
     resumoAtual?.longo_prazo ?? lista.reduce((a, p) => a + Number(p.longo_prazo ?? 0), 0);
   const nomeEmpresa = (id: string | null) => empresas.find((e) => e.id === id)?.nome ?? "—";
 
+  const posicoesGrafico = detalhesAtuais.length
+    ? lista
+    : oficiaisAtuais.length
+      ? oficiaisAtuais
+      : lista;
   const instituicoes = Object.entries(
-    lista
+    posicoesGrafico
       .filter((p) => p.tipo === "bancaria")
       .reduce<Record<string, { Saldo: number; CurtoPrazo: number; LongoPrazo: number }>>(
         (a, p) => ({
@@ -321,8 +489,8 @@ function Dividas() {
         <div>
           <h1 className="text-lg font-semibold">Dívidas e operações</h1>
           <p className="text-sm text-muted-foreground">
-            Posição mensal consolidada{dataBase ? ` em ${dataBR(dataBase)}` : ""}. Importe a
-            planilha “Endividamento - Gráficos” para atualizar a visão.
+            Posição mensal consolidada{dataBase ? ` em ${dataBR(dataBase)}` : ""}. Os saldos vêm de
+            “Endividamento - Gráficos” e os dados contratuais de “Amortização de dívidas”.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -335,13 +503,37 @@ function Dividas() {
                 className="hidden"
                 onChange={(e) => importarEndividamento(e.target.files?.[0])}
               />
-              <Button size="sm" disabled={importando} onClick={() => arquivoRef.current?.click()}>
+              <input
+                ref={detalhesRef}
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                onChange={(e) => importarDetalhes(e.target.files?.[0])}
+              />
+              <Button
+                size="sm"
+                disabled={importando || importandoDetalhes}
+                onClick={() => arquivoRef.current?.click()}
+              >
                 {importando ? (
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                 ) : (
                   <Upload className="mr-1.5 h-4 w-4" />
                 )}
-                Importar mês
+                Importar saldos
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={importando || importandoDetalhes}
+                onClick={() => detalhesRef.current?.click()}
+              >
+                {importandoDetalhes ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-1.5 h-4 w-4" />
+                )}
+                Importar detalhes
               </Button>
             </>
           )}
@@ -503,7 +695,8 @@ function Dividas() {
         <div className="border-b p-4">
           <p className="font-semibold">Abertura das dívidas e operações</p>
           <p className="text-xs text-muted-foreground">
-            Saldo oficial da coluna “Saldo contábil aproximado”, aba “Saldos atuais”.
+            Saldos oficiais de “Endividamento - Gráficos”; condições contratuais de “Amortização de
+            dívidas”.
           </p>
         </div>
         <div className="max-h-[60vh] overflow-auto">
