@@ -161,13 +161,20 @@ function FluxoSemanal() {
           <table className="w-full min-w-[900px] border-collapse text-sm">
             <thead>
               <tr className="bg-primary text-primary-foreground">
-                <th className="sticky left-0 z-20 bg-primary p-2 text-left font-medium">Categoria</th>
+                <th className="sticky left-0 top-0 z-40 bg-primary p-2 text-left font-medium shadow-sm">
+                  Categoria
+                </th>
                 {fluxo.semanas.map((s) => (
-                  <th key={s.chave} className="whitespace-nowrap p-2 text-right font-medium">
+                  <th
+                    key={s.chave}
+                    className="sticky top-0 z-30 whitespace-nowrap bg-primary p-2 text-right font-medium shadow-sm"
+                  >
                     {s.rotulo}
                   </th>
                 ))}
-                <th className="p-2 text-right font-medium">Total</th>
+                <th className="sticky top-0 z-30 bg-primary p-2 text-right font-medium shadow-sm">
+                  Total
+                </th>
               </tr>
             </thead>
             <tbody>
