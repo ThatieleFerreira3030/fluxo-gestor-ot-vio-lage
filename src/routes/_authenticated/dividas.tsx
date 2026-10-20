@@ -714,19 +714,17 @@ function Dividas() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border border-orange-200 bg-orange-50/60 p-4">
-              <p className="text-xs text-muted-foreground">Taxa média anual</p>
-              <p className="mt-1 text-xl font-semibold text-orange-900">
-                {taxaMediaAnual === null ? "—" : `${percentual(taxaMediaAnual)} a.a.`}
-              </p>
-            </div>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4">
-              <p className="text-xs text-muted-foreground">Taxa média mensal equivalente</p>
-              <p className="mt-1 text-xl font-semibold text-emerald-900">
-                {taxaMediaMensal === null ? "—" : `${percentual(taxaMediaMensal)} a.m.`}
-              </p>
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Kpi
+              titulo="Taxa média anual"
+              valor={taxaMediaAnual === null ? "—" : `${percentual(taxaMediaAnual)} a.a.`}
+              tom="alerta"
+            />
+            <Kpi
+              titulo="Taxa média mensal equivalente"
+              valor={taxaMediaMensal === null ? "—" : `${percentual(taxaMediaMensal)} a.m.`}
+              tom="positivo"
+            />
           </div>
           {taxaMediaAnual === null ? (
             <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
@@ -766,18 +764,19 @@ function Dividas() {
           <CardDescription>Composição da dívida líquida consolidada.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              ["Dívida bruta", total],
-              ["(-) Disponibilidades", disponiveis],
-              ["(-) Quotas de capital", quotas],
-              ["Dívida líquida", liquida],
-            ].map(([r, v]) => (
-              <div key={String(r)} className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">{r}</p>
-                <p className="font-semibold">{brl(Number(v))}</p>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <Kpi titulo="Dívida bruta" valor={brl(Number(total), true)} tom="negativo" />
+            <Kpi
+              titulo="(-) Disponibilidades"
+              valor={brl(Number(disponiveis), true)}
+              tom="positivo"
+            />
+            <Kpi
+              titulo="(-) Quotas de capital"
+              valor={brl(Number(quotas), true)}
+              tom="positivo"
+            />
+            <Kpi titulo="Dívida líquida" valor={brl(Number(liquida), true)} tom="negativo" />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.4fr)]">
