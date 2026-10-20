@@ -157,7 +157,7 @@ function FluxoSemanal() {
       </div>
 
       <Card className="overflow-hidden p-0 shadow-panel">
-        <div className="overflow-auto">
+        <div className="max-h-[75vh] overflow-auto overscroll-contain">
           <table className="w-full min-w-[900px] border-collapse text-sm">
             <thead>
               <tr className="bg-primary text-primary-foreground">
