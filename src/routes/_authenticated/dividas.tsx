@@ -76,6 +76,36 @@ const rotuloTipo = (tipo: string) =>
         ? "Bancária"
         : "Outras";
 
+const numeroPercentual = (valor: string) => {
+  const numero = Number(valor.replace(/\./g, "").replace(",", "."));
+  return Number.isFinite(numero) ? numero / 100 : null;
+};
+
+const taxaEfetivaAnual = (posicao: Posicao) => {
+  const taxa = posicao.taxa ?? "";
+  const efetiva = taxa.match(/efetiva\s+([\d.,]+)%/i);
+  if (efetiva?.[1]) return numeroPercentual(efetiva[1]);
+  const indexador = (posicao.indexador ?? "").toLowerCase();
+  if (indexador.includes("cdi") || indexador.includes("ipca")) return null;
+  const contratual = taxa.match(/([\d.,]+)%/);
+  return contratual?.[1] ? numeroPercentual(contratual[1]) : null;
+};
+
+const taxaIndexadorRegistrada = (posicao: Posicao) => {
+  const taxa = posicao.taxa ?? "";
+  const indice = taxa.match(/índice\s+([\d.,]+)%/i);
+  return indice?.[1] ? numeroPercentual(indice[1]) : null;
+};
+
+const taxaContratualExibicao = (taxa: string | null) =>
+  taxa?.split(" · índice")[0] ?? null;
+
+const percentual = (taxa: number, casas = 2) =>
+  `${(taxa * 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: casas,
+    maximumFractionDigits: casas,
+  })}%`;
+
 const chaveCredor = (valor: string) => {
   const chave = valor
     .normalize("NFD")
@@ -434,6 +464,42 @@ function Dividas() {
       .filter((d) => d.disponivel_resgate && !d.tipo.toLowerCase().includes("quota"))
       .reduce((a, d) => a + Number(d.saldo) - Number(d.valor_bloqueado ?? 0), 0);
   const liquida = resumoAtual?.divida_liquida ?? total - disponiveis - quotas;
+  const dividasBancariasComTaxa = lista
+    .filter((p) => p.tipo === "bancaria" && Number(p.saldo_contabil_aproximado) > 0)
+    .map((p) => ({ ...p, taxaEfetiva: taxaEfetivaAnual(p) }))
+    .filter(
+      (p): p is Posicao & { taxaEfetiva: number } =>
+        p.taxaEfetiva !== null && Number.isFinite(p.taxaEfetiva),
+    );
+  const saldoBancarioComTaxa = dividasBancariasComTaxa.reduce(
+    (soma, p) => soma + Number(p.saldo_contabil_aproximado),
+    0,
+  );
+  const coberturaTaxas = bancaria > 0 ? saldoBancarioComTaxa / bancaria : 0;
+  const taxaMediaAnualCalculada = saldoBancarioComTaxa
+    ? dividasBancariasComTaxa.reduce(
+        (soma, p) => soma + p.taxaEfetiva * Number(p.saldo_contabil_aproximado),
+        0,
+      ) / saldoBancarioComTaxa
+    : null;
+  const taxaMediaAnual = coberturaTaxas >= 0.95 ? taxaMediaAnualCalculada : null;
+  const taxaMediaMensal =
+    taxaMediaAnual === null ? null : Math.pow(1 + taxaMediaAnual, 1 / 12) - 1;
+  const indexadoresTaxaMedia = Array.from(
+    new Map(
+      dividasBancariasComTaxa
+        .map((p) => {
+          const taxaIndice = taxaIndexadorRegistrada(p);
+          return taxaIndice === null || !p.indexador
+            ? null
+            : [
+                p.indexador.toUpperCase(),
+                `${p.indexador.toUpperCase()} ${percentual(taxaIndice)} a.a.`,
+              ];
+        })
+        .filter((item): item is [string, string] => item !== null),
+    ).values(),
+  );
   const curtoPrazo =
     resumoAtual?.curto_prazo ?? lista.reduce((a, p) => a + Number(p.curto_prazo ?? 0), 0);
   const longoPrazo =
@@ -639,6 +705,56 @@ function Dividas() {
         <Kpi titulo="Dívida tributária" valor={brl(tributaria, true)} tom="alerta" />
         <Kpi titulo="Dívida líquida" valor={brl(liquida, true)} tom="negativo" />
       </div>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Custo médio do endividamento bancário</CardTitle>
+          <CardDescription>
+            Média ponderada pelo saldo devedor na data-base
+            {dataBase ? ` de ${dataBR(dataBase)}` : ""}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-orange-200 bg-orange-50/60 p-4">
+              <p className="text-xs text-muted-foreground">Taxa média anual</p>
+              <p className="mt-1 text-xl font-semibold text-orange-900">
+                {taxaMediaAnual === null ? "—" : `${percentual(taxaMediaAnual)} a.a.`}
+              </p>
+            </div>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4">
+              <p className="text-xs text-muted-foreground">Taxa média mensal equivalente</p>
+              <p className="mt-1 text-xl font-semibold text-emerald-900">
+                {taxaMediaMensal === null ? "—" : `${percentual(taxaMediaMensal)} a.m.`}
+              </p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-xs text-muted-foreground">Saldo com taxa identificada</p>
+              <p className="mt-1 text-xl font-semibold">{percentual(coberturaTaxas, 1)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {brl(saldoBancarioComTaxa, true)} de {brl(Number(bancaria), true)}
+              </p>
+            </div>
+          </div>
+          {taxaMediaAnual === null ? (
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>
+                Reimporte os detalhes da amortização para registrar os indexadores da data-base e
+                calcular a taxa média com cobertura mínima de 95% da dívida bancária.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>
+                Taxa mensal calculada por equivalência composta, não pela divisão da taxa anual por 12.
+              </span>
+              {!!indexadoresTaxaMedia.length && (
+                <span>Indexadores utilizados: {indexadoresTaxaMedia.join(" · ")}</span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
       {posicoes.isError && (
         <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -892,7 +1008,7 @@ function Dividas() {
                           : "—"}
                       </td>
                       <td className="p-2">
-                        {[p.indexador, p.taxa].filter(Boolean).join(" · ") || "—"}
+                        {[p.indexador, taxaContratualExibicao(p.taxa)].filter(Boolean).join(" · ") || "—"}
                       </td>
                       <td className="num p-2 text-right">
                         {p.parcelas_restantes === null ? "—" : num(p.parcelas_restantes)}
