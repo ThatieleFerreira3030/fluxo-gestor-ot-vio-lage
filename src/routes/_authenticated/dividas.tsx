@@ -714,7 +714,7 @@ function Dividas() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-orange-200 bg-orange-50/60 p-4">
               <p className="text-xs text-muted-foreground">Taxa média anual</p>
               <p className="mt-1 text-xl font-semibold text-orange-900">
@@ -725,13 +725,6 @@ function Dividas() {
               <p className="text-xs text-muted-foreground">Taxa média mensal equivalente</p>
               <p className="mt-1 text-xl font-semibold text-emerald-900">
                 {taxaMediaMensal === null ? "—" : `${percentual(taxaMediaMensal)} a.m.`}
-              </p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground">Saldo com taxa identificada</p>
-              <p className="mt-1 text-xl font-semibold">{percentual(coberturaTaxas, 1)}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {brl(saldoBancarioComTaxa, true)} de {brl(Number(bancaria), true)}
               </p>
             </div>
           </div>
