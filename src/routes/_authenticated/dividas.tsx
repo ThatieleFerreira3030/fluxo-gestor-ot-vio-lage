@@ -156,6 +156,7 @@ function Dividas() {
   const [importando, setImportando] = useState(false);
   const [importandoDetalhes, setImportandoDetalhes] = useState(false);
   const [periodoSelecionado, setPeriodoSelecionado] = useState<string | null>(null);
+  const [instituicaoSelecionada, setInstituicaoSelecionada] = useState<string | null>(null);
   const { empresas, disponibilidades } = useFluxo();
   const posicoes = useQuery({
     queryKey: ["posicoes-dividas"],
@@ -639,6 +640,26 @@ function Dividas() {
     const periodo = item.periodo ?? item.payload?.periodo;
     if (periodo) setPeriodoSelecionado(periodo);
   };
+  const parcelasDaInstituicao = instituicaoSelecionada
+    ? parcelasFuturas.filter(
+        (parcela) =>
+          !!parcela.contraparte &&
+          chaveCredor(parcela.contraparte) === chaveCredor(instituicaoSelecionada),
+      )
+    : [];
+  const totalAmortizacaoInstituicao = parcelasDaInstituicao.reduce(
+    (soma, parcela) => soma + valorDetalhe(parcela, "Amortização"),
+    0,
+  );
+  const totalPagamentoInstituicao = parcelasDaInstituicao.reduce(
+    (soma, parcela) => soma + Number(parcela.valor_liquido),
+    0,
+  );
+  const abrirDetalheInstituicao = (entrada: unknown) => {
+    const item = entrada as { instituicao?: string; payload?: { instituicao?: string } };
+    const instituicao = item.instituicao ?? item.payload?.instituicao;
+    if (instituicao) setInstituicaoSelecionada(instituicao);
+  };
   const variacaoLiquida =
     resumoAnterior && Number(resumoAnterior.divida_liquida) !== 0
       ? (liquida / Number(resumoAnterior.divida_liquida) - 1) * 100
@@ -1106,12 +1127,87 @@ function Dividas() {
               <YAxis type="category" dataKey="instituicao" width={150} />
               <Tooltip formatter={(v) => brl(Number(v))} />
               <Legend />
-              <Bar dataKey="CurtoPrazo" name="Curto prazo" stackId="prazo" fill="#ee7d24" />
-              <Bar dataKey="LongoPrazo" name="Longo prazo" stackId="prazo" fill="#1f6b57" />
+              <Bar
+                dataKey="CurtoPrazo"
+                name="Curto prazo"
+                stackId="prazo"
+                fill="#ee7d24"
+                className="cursor-pointer"
+                onClick={abrirDetalheInstituicao}
+              />
+              <Bar
+                dataKey="LongoPrazo"
+                name="Longo prazo"
+                stackId="prazo"
+                fill="#1f6b57"
+                className="cursor-pointer"
+                onClick={abrirDetalheInstituicao}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
+      <Dialog
+        open={!!instituicaoSelecionada}
+        onOpenChange={(aberto) => !aberto && setInstituicaoSelecionada(null)}
+      >
+        <DialogContent className="max-h-[88vh] max-w-6xl overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Provisões de pagamento — {instituicaoSelecionada}</DialogTitle>
+            <DialogDescription>
+              {parcelasDaInstituicao.length}{" "}
+              {parcelasDaInstituicao.length === 1 ? "pagamento previsto" : "pagamentos previstos"} ·
+              Amortização {brl(totalAmortizacaoInstituicao)} · Pagamento total{" "}
+              {brl(totalPagamentoInstituicao)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-auto rounded-md border">
+            <table className="w-full min-w-[1050px] text-sm">
+              <thead className="sticky top-0 bg-muted">
+                <tr className="text-left">
+                  <th className="p-2 font-medium">Vencimento</th>
+                  <th className="p-2 font-medium">Empresa</th>
+                  <th className="p-2 font-medium">Contrato</th>
+                  <th className="p-2 font-medium">Evento</th>
+                  <th className="p-2 text-right font-medium">Juros</th>
+                  <th className="p-2 text-right font-medium">Amortização</th>
+                  <th className="p-2 text-right font-medium">Pagamento total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {parcelasDaInstituicao.map((parcela) => (
+                  <tr key={parcela.id} className="border-t">
+                    <td className="p-2">{dataBR(parcela.data_prevista)}</td>
+                    <td className="p-2">{nomeEmpresa(parcela.empresa_id)}</td>
+                    <td className="p-2">{parcela.documento ?? "—"}</td>
+                    <td className="p-2">{parcela.descricao ?? "—"}</td>
+                    <td className="num p-2 text-right">
+                      {brl(valorDetalhe(parcela, "Juros / remuneração"))}
+                    </td>
+                    <td className="num p-2 text-right text-orange-700">
+                      {brl(valorDetalhe(parcela, "Amortização"))}
+                    </td>
+                    <td className="num p-2 text-right font-semibold text-destructive">
+                      {brl(Number(parcela.valor_liquido))}
+                    </td>
+                  </tr>
+                ))}
+                {!parcelasDaInstituicao.length && (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      Não há provisões futuras vinculadas a esta instituição.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            O gráfico mantém o saldo atual. Esta listagem apresenta somente as provisões futuras da
+            aba “Cronograma Cronológico” da planilha de amortização.
+          </p>
+        </DialogContent>
+      </Dialog>
       <div className="mt-6 space-y-6">
         {secoesAbertura.map(({ titulo, dados, mensagemVazia }) => (
           <Card key={titulo} className="overflow-hidden p-0">
