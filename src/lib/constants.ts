@@ -49,6 +49,7 @@ export const CATEGORIAS_AMORTIZACAO = [
 
 export const STATUS_LABEL: Record<string, string> = {
   confirmado: "Confirmado",
+  escalado: "Escalado",
   estimado: "Estimado",
   pendente: "Pendente",
   realizado: "Realizado",

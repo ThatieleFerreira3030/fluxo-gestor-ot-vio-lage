@@ -9,7 +9,7 @@ import { exportarExcel } from "@/lib/exportar";
 
 export function statusVariant(status: string) {
   if (status === "confirmado" || status === "realizado") return "border-success text-success";
-  if (status === "pendente") return "border-warning text-warning";
+  if (status === "escalado" || status === "pendente") return "border-warning text-warning";
   if (status === "cancelado") return "border-muted-foreground text-muted-foreground";
   return "border-info text-info";
 }

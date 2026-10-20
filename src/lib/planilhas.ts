@@ -42,7 +42,7 @@ export type LinhaMovimento = {
   empresa: string | null;
   data: string;
   valor: number;
-  status: "confirmado" | "estimado" | "realizado" | "pendente";
+  status: "confirmado" | "escalado" | "estimado" | "realizado" | "pendente";
   detalhe: Record<string, unknown>;
 };
 
@@ -198,8 +198,8 @@ const statusDaSituacao = (s: string): LinhaMovimento["status"] => {
   const v = semAcento(s);
   if (v.includes("recebido") || v.includes("pago") || v.includes("realizado")) return "realizado";
   if (v.includes("previsao") || v.includes("provisao") || v.includes("estimad")) return "estimado";
-  if (v.includes("faturado") || v.includes("agendado") || v.includes("escalado"))
-    return "confirmado";
+  if (v.includes("escalado")) return "escalado";
+  if (v.includes("faturado") || v.includes("agendado")) return "confirmado";
   return v ? "confirmado" : "estimado";
 };
 
