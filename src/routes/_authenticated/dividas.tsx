@@ -505,6 +505,43 @@ function Dividas() {
         },
       ]
     : [];
+  const cascataEndividamento = [
+    {
+      etapa: "Bancária",
+      base: 0,
+      aumento: Number(bancaria),
+      reducao: 0,
+      total: 0,
+    },
+    {
+      etapa: "Tributária",
+      base: Number(bancaria),
+      aumento: Number(tributaria),
+      reducao: 0,
+      total: 0,
+    },
+    {
+      etapa: "Caixa",
+      base: Math.max(Number(total) - Number(disponiveis), 0),
+      aumento: 0,
+      reducao: Number(disponiveis),
+      total: 0,
+    },
+    {
+      etapa: "Quotas",
+      base: Math.max(Number(liquida), 0),
+      aumento: 0,
+      reducao: Number(quotas),
+      total: 0,
+    },
+    {
+      etapa: "Dívida líquida",
+      base: 0,
+      aumento: 0,
+      reducao: 0,
+      total: Number(liquida),
+    },
+  ];
 
   return (
     <div>
@@ -607,18 +644,75 @@ function Dividas() {
           <CardTitle className="text-base">Resumo do endividamento</CardTitle>
           <CardDescription>Composição da dívida líquida consolidada.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["Dívida bruta", total],
-            ["(-) Disponibilidades", disponiveis],
-            ["(-) Quotas de capital", quotas],
-            ["Dívida líquida", liquida],
-          ].map(([r, v]) => (
-            <div key={String(r)} className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">{r}</p>
-              <p className="font-semibold">{brl(Number(v))}</p>
+        <CardContent className="space-y-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Dívida bruta", total],
+              ["(-) Disponibilidades", disponiveis],
+              ["(-) Quotas de capital", quotas],
+              ["Dívida líquida", liquida],
+            ].map(([r, v]) => (
+              <div key={String(r)} className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">{r}</p>
+                <p className="font-semibold">{brl(Number(v))}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.4fr)]">
+            <div className="overflow-hidden rounded-lg border">
+              <div className="grid grid-cols-[1fr_auto] gap-4 border-b bg-muted/60 px-4 py-3 text-xs font-semibold">
+                <span>Componente</span>
+                <span>Saldo devedor</span>
+              </div>
+              {[
+                ["Dívida bancária", bancaria, false],
+                ["Dívida tributária (parcelamentos)", tributaria, false],
+                ["Endividamento bruto total", total, false],
+                ["(-) Disponível de caixa", disponiveis, true],
+                ["(-) Quotas de capital", quotas, true],
+                ["Dívida líquida total", liquida, false],
+              ].map(([rotulo, valor, deducao], indice) => (
+                <div
+                  key={String(rotulo)}
+                  className={`grid grid-cols-[1fr_auto] gap-4 px-4 py-3 text-sm ${
+                    indice === 2
+                      ? "bg-orange-50 font-semibold text-orange-950"
+                      : indice === 5
+                        ? "bg-[#0b4228] font-semibold text-white"
+                        : "border-b last:border-0"
+                  }`}
+                >
+                  <span>{String(rotulo)}</span>
+                  <span className="text-right tabular-nums">
+                    {deducao ? `(${brl(Number(valor))})` : brl(Number(valor))}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+
+            <div className="h-80 min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={cascataEndividamento} margin={{ top: 20, right: 12, left: 8, bottom: 18 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="etapa" interval={0} tick={{ fontSize: 12 }} />
+                  <YAxis tickFormatter={(v) => brl(Number(v), true)} />
+                  <Tooltip formatter={(v) => brl(Number(v))} />
+                  <Bar
+                    dataKey="base"
+                    name="Base"
+                    stackId="cascata"
+                    fill="transparent"
+                    legendType="none"
+                    tooltipType="none"
+                  />
+                  <Bar dataKey="aumento" name="Acréscimo" stackId="cascata" fill="#1f6b57" />
+                  <Bar dataKey="reducao" name="Redução" stackId="cascata" fill="#ee7d24" />
+                  <Bar dataKey="total" name="Dívida líquida" stackId="cascata" fill="#0b4228" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </CardContent>
       </Card>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
