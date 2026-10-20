@@ -542,6 +542,18 @@ function Dividas() {
       total: Number(liquida),
     },
   ];
+  const secoesAbertura = [
+    {
+      titulo: "Dívidas bancárias",
+      dados: lista.filter((p) => p.tipo === "bancaria"),
+      mensagemVazia: "Nenhuma dívida bancária encontrada para esta data-base.",
+    },
+    {
+      titulo: "Dívidas tributárias",
+      dados: lista.filter((p) => p.tipo === "tributaria"),
+      mensagemVazia: "Nenhuma dívida tributária encontrada para esta data-base.",
+    },
+  ];
 
   return (
     <div>
@@ -828,72 +840,79 @@ function Dividas() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-      <Card className="mt-6 overflow-hidden p-0">
-        <div className="border-b p-4">
-          <p className="font-semibold">Abertura das dívidas e operações</p>
-        </div>
-        <div className="max-h-[60vh] overflow-auto">
-          <table className="w-full min-w-[1500px] text-sm">
-            <thead className="sticky top-0 bg-muted">
-              <tr>
-                {[
-                  "Tipo",
-                  "Empresa",
-                  "Credor",
-                  "Modalidade / objeto",
-                  "Saldo contábil",
-                  "Curto prazo",
-                  "Longo prazo",
-                  "% da dívida",
-                  "Indexador / taxa",
-                  "Parcelas",
-                  "Vencimento",
-                ].map((h) => (
-                  <th key={h} className="p-2 text-left font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map((p) => (
-                <tr key={p.id} className="border-t">
-                  <td className="p-2">
-                    <Badge variant="outline">{rotuloTipo(p.tipo)}</Badge>
-                  </td>
-                  <td className="p-2">{nomeEmpresa(p.empresa_id)}</td>
-                  <td className="p-2 font-medium">{p.credor}</td>
-                  <td className="p-2">{p.modalidade ?? "—"}</td>
-                  <td className="num p-2 text-right text-destructive">
-                    {brl(Number(p.saldo_contabil_aproximado))}
-                  </td>
-                  <td className="num p-2 text-right">{brl(Number(p.curto_prazo ?? 0))}</td>
-                  <td className="num p-2 text-right">{brl(Number(p.longo_prazo ?? 0))}</td>
-                  <td className="num p-2 text-right">
-                    {total
-                      ? `${((Number(p.saldo_contabil_aproximado) / total) * 100).toFixed(1)}%`
-                      : "—"}
-                  </td>
-                  <td className="p-2">
-                    {[p.indexador, p.taxa].filter(Boolean).join(" · ") || "—"}
-                  </td>
-                  <td className="num p-2 text-right">
-                    {p.parcelas_restantes === null ? "—" : num(p.parcelas_restantes)}
-                  </td>
-                  <td className="p-2">{dataBR(p.vencimento)}</td>
-                </tr>
-              ))}
-              {!lista.length && (
-                <tr>
-                  <td colSpan={11} className="p-8 text-center text-muted-foreground">
-                    Importe a planilha mensal de endividamento.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <div className="mt-6 space-y-6">
+        {secoesAbertura.map(({ titulo, dados, mensagemVazia }) => (
+          <Card key={titulo} className="overflow-hidden p-0">
+            <div className="border-b p-4">
+              <p className="font-semibold">{titulo}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {dados.length} {dados.length === 1 ? "operação" : "operações"} na data-base atual.
+              </p>
+            </div>
+            <div className="max-h-[60vh] overflow-auto">
+              <table className="w-full min-w-[1500px] text-sm">
+                <thead className="sticky top-0 bg-muted">
+                  <tr>
+                    {[
+                      "Tipo",
+                      "Empresa",
+                      "Credor",
+                      "Modalidade / objeto",
+                      "Saldo contábil",
+                      "Curto prazo",
+                      "Longo prazo",
+                      "% da dívida",
+                      "Indexador / taxa",
+                      "Parcelas",
+                      "Vencimento",
+                    ].map((h) => (
+                      <th key={h} className="p-2 text-left font-medium">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {dados.map((p) => (
+                    <tr key={p.id} className="border-t">
+                      <td className="p-2">
+                        <Badge variant="outline">{rotuloTipo(p.tipo)}</Badge>
+                      </td>
+                      <td className="p-2">{nomeEmpresa(p.empresa_id)}</td>
+                      <td className="p-2 font-medium">{p.credor}</td>
+                      <td className="p-2">{p.modalidade ?? "—"}</td>
+                      <td className="num p-2 text-right text-destructive">
+                        {brl(Number(p.saldo_contabil_aproximado))}
+                      </td>
+                      <td className="num p-2 text-right">{brl(Number(p.curto_prazo ?? 0))}</td>
+                      <td className="num p-2 text-right">{brl(Number(p.longo_prazo ?? 0))}</td>
+                      <td className="num p-2 text-right">
+                        {total
+                          ? `${((Number(p.saldo_contabil_aproximado) / total) * 100).toFixed(1)}%`
+                          : "—"}
+                      </td>
+                      <td className="p-2">
+                        {[p.indexador, p.taxa].filter(Boolean).join(" · ") || "—"}
+                      </td>
+                      <td className="num p-2 text-right">
+                        {p.parcelas_restantes === null ? "—" : num(p.parcelas_restantes)}
+                      </td>
+                      <td className="p-2">{dataBR(p.vencimento)}</td>
+                    </tr>
+                  ))}
+                  {!dados.length && (
+                    <tr>
+                      <td colSpan={11} className="p-8 text-center text-muted-foreground">
+                        {mensagemVazia}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
