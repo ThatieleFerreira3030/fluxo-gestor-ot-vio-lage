@@ -107,7 +107,7 @@ function FluxoSemanal() {
           {brl(v, true)}
         </td>
       ))}
-      <td className="num p-2 text-right text-sm">{brl(total, true)}</td>
+      <td className="num whitespace-nowrap p-2 text-right text-sm">{brl(total, true)}</td>
     </tr>
   );
 
@@ -180,7 +180,7 @@ function FluxoSemanal() {
                     {s.rotulo}
                   </th>
                 ))}
-                <th className="sticky top-0 z-30 bg-primary p-2 text-right font-medium shadow-sm">
+                <th className="sticky top-0 z-30 whitespace-nowrap bg-primary p-2 text-right font-medium shadow-sm">
                   Total
                 </th>
               </tr>
@@ -224,7 +224,7 @@ function FluxoSemanal() {
                             {v === 0 ? "—" : brl(v, true)}
                           </td>
                         ))}
-                        <td className="num p-2 text-right font-medium">{brl(l.total, true)}</td>
+                        <td className="num whitespace-nowrap p-2 text-right font-medium">{brl(l.total, true)}</td>
                       </tr>
                     ))}
                   <Totais
