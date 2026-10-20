@@ -5,12 +5,12 @@ type EmpresaIdentificavel = {
 };
 
 const EMPRESAS_OFICIAIS = [
-  { nome: "Vera Cruz Agropecuária", aliases: ["Vera Cruz Agropecuaria Ltda"] },
+  { nome: "Vera Cruz Agropecuária", aliases: ["Vera Cruz", "Vera Cruz Agropecuaria Ltda"] },
   { nome: "OL Látex", aliases: ["OL Latex Ltda"] },
   { nome: "OL Látex Tocantins", aliases: ["OL Latex Tocantins Ltda"] },
   {
     nome: "Palmeiras Empreendimentos Imobiliários",
-    aliases: ["Palmeiras Empreendimentos Imobiliarios Ltda"],
+    aliases: ["Palmeiras", "Palmeiras Empreendimentos Imobiliarios Ltda"],
   },
   { nome: "Planagri", aliases: ["Planagri Agropecuaria Ltda", "Planagri Ltda"] },
   { nome: "Goiás Carne/Cooperboi", aliases: ["Goias Carne", "Cooperboi"] },
