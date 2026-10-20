@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   LogOut,
   Presentation,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +36,7 @@ const NAV = [
   { to: "/receitas", rotulo: "Receitas Projetadas", icone: TrendingUp, somenteAdmin: false },
   { to: "/pagamentos", rotulo: "Pagamentos", icone: Receipt, somenteAdmin: false },
   { to: "/dividas", rotulo: "Dívidas e Operações", icone: Banknote, somenteAdmin: false },
+  { to: "/assistente-dividas", rotulo: "Assistente de Dívidas", icone: Sparkles, somenteAdmin: false },
   { to: "/atualizacao-semanal", rotulo: "Atualização Semanal", icone: Upload, somenteAdmin: true },
   { to: "/importacoes", rotulo: "Importações", icone: FileUp, somenteAdmin: true },
   {
