@@ -47,7 +47,9 @@ function Conciliacao() {
 
   const semClassificacao = movimentacoes.filter((m) => m.categoria === "Não classificado");
   const semData = movimentacoes.filter((m) => !m.data_prevista);
-  const naoConfirmados = movimentacoes.filter((m) => m.status === "estimado" || m.status === "pendente");
+  const naoConfirmados = movimentacoes.filter(
+    (m) => m.status === "escalado" || m.status === "estimado" || m.status === "pendente",
+  );
 
   if (carregando) return <p className="text-sm text-muted-foreground">Carregando conciliação…</p>;
 
