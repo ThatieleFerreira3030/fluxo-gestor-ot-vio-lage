@@ -692,10 +692,6 @@ function Dividas() {
       <Card className="mt-6 overflow-hidden p-0">
         <div className="border-b p-4">
           <p className="font-semibold">Abertura das dívidas e operações</p>
-          <p className="text-xs text-muted-foreground">
-            Saldos oficiais de “Endividamento - Gráficos”; condições contratuais de “Amortização de
-            dívidas”.
-          </p>
         </div>
         <div className="max-h-[60vh] overflow-auto">
           <table className="w-full min-w-[1500px] text-sm">
