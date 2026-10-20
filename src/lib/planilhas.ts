@@ -141,8 +141,10 @@ export const numero = (v: unknown): number | null => {
 export const dataCelula = (v: unknown): string | null => {
   if (v === null || v === undefined || v === "") return null;
   if (v instanceof Date) {
-    return `${v.getUTCFullYear()}-${String(v.getUTCMonth() + 1).padStart(2, "0")}-${String(
-      v.getUTCDate(),
+    // O XLSX cria datas de planilha no fuso local. Usar UTC deslocava datas
+    // brasileiras em um dia (30/09 aparecia como 29/09).
+    return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, "0")}-${String(
+      v.getDate(),
     ).padStart(2, "0")}`;
   }
   if (typeof v === "number") {
@@ -851,6 +853,7 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
       return nome.includes("saldo") && nome.includes("atual");
     });
   const dividas: LinhaDivida[] = [];
+  let dataBaseSaldos: string | null = null;
   if (!nomeSaldos) {
     erros.push('Aba "Saldos atuais" não encontrada para atualizar o endividamento.');
   } else {
@@ -867,9 +870,10 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
       const iIdSaldo = colSaldo("ID", "Contrato", "Número contrato", "Numero contrato");
       const iEmpresaSaldo = colSaldo("Empresa");
       const iCredorSaldo = colSaldo("Credor", "Banco", "Instituição", "Instituicao");
+      const iDataBaseSaldo = colSaldo("Data-base", "Data base");
       const iModalidade = colSaldo("Modalidade", "Objeto parcelamento", "Operação", "Operacao");
       const iIndexador = colSaldo("Indexador");
-      const iTaxa = colSaldo("Taxa");
+      const iTaxa = colSaldo("Spread / taxa real", "Taxa");
       const iVencimentoSaldo = colSaldo("Vencimento");
       const iParcelas = colSaldo("Parcelas restantes");
       const colunasSafra = (linhasSaldos[indiceCabecalho] ?? [])
@@ -892,19 +896,42 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
               : "outras";
         const contrato = txt(r[iIdSaldo]) || null;
         const empresa = txt(r[iEmpresaSaldo]) || null;
+        const dataBaseSaldo = dataCelula(r[iDataBaseSaldo]);
+        if (dataBaseSaldo && (!dataBaseSaldos || dataBaseSaldo > dataBaseSaldos))
+          dataBaseSaldos = dataBaseSaldo;
+        const parcelasContrato = contrato
+          ? movimentos.filter(
+              (movimento) =>
+                movimento.documento === contrato &&
+                (!dataBaseSaldo || movimento.data > dataBaseSaldo),
+            )
+          : [];
+        const vencimentoCalculado = parcelasContrato
+          .map((movimento) => movimento.data)
+          .sort()
+          .at(-1);
+        const taxaBruta = r[iTaxa];
+        const taxaNumero = numero(taxaBruta);
+        const taxa =
+          taxaNumero !== null && typeof taxaBruta === "number"
+            ? `${(Math.abs(taxaNumero) <= 1 ? taxaNumero * 100 : taxaNumero).toLocaleString(
+                "pt-BR",
+                { minimumFractionDigits: 2, maximumFractionDigits: 4 },
+              )}% a.a.`
+            : txt(taxaBruta) || null;
         const chave = [tipo, contrato, empresa, credor, modalidade].filter(Boolean).join("|");
         dividas.push({
           chave,
           empresa,
           tipo,
           credor: credor || modalidade || "Não informado",
-          modalidade: modalidade || "Não informada",
+          modalidade: modalidade || txt(r[iTipo]) || "Não informada",
           contrato,
           saldoContabil: Math.abs(saldo),
           indexador: txt(r[iIndexador]) || null,
-          taxa: txt(r[iTaxa]) || null,
-          vencimento: dataCelula(r[iVencimentoSaldo]),
-          parcelasRestantes: numero(r[iParcelas]),
+          taxa,
+          vencimento: dataCelula(r[iVencimentoSaldo]) ?? vencimentoCalculado ?? null,
+          parcelasRestantes: numero(r[iParcelas]) ?? parcelasContrato.length,
           safra1: numero(r[colunasSafra[0]?.indice ?? -1]) ?? 0,
           safra2: numero(r[colunasSafra[1]?.indice ?? -1]) ?? 0,
           safra3: numero(r[colunasSafra[2]?.indice ?? -1]) ?? 0,
@@ -923,7 +950,7 @@ const lerAmortizacoes = (wb: XLSX.WorkBook, arquivo: string): LeituraFonte => {
     fonte: "amortizacoes",
     arquivo,
     abas: wb.SheetNames,
-    dataBase: null,
+    dataBase: dataBaseSaldos,
     disponibilidades: [],
     movimentos,
     dividas,
