@@ -688,7 +688,7 @@ function Dividas() {
                     <YAxis type="category" dataKey="categoria" width={92} />
                     <Tooltip formatter={(v) => brl(Number(v))} />
                     <Legend />
-                    <Bar dataKey="Anterior" fill="#94a3b8" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="Anterior" fill="#ee7d24" radius={[0, 4, 4, 0]} />
                     <Bar dataKey="Atual" fill="#1f6b57" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
