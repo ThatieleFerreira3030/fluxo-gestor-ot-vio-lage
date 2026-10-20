@@ -1,3 +1,4 @@
+import type { Json } from "@/integrations/supabase/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
@@ -458,7 +459,7 @@ function Dividas() {
             status: "estimado" as const,
             fonte: "cronograma-amortizacoes",
             chave_origem: movimento.chave,
-            detalhe: movimento.detalhe,
+            detalhe: movimento.detalhe as Json,
           })),
         );
         if (erroParcelas) throw erroParcelas;
