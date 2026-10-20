@@ -13,7 +13,6 @@ import {
 } from "recharts";
 import { AlertTriangle, Download, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { FiltrosBar } from "@/components/FiltrosBar";
 import { Kpi } from "@/components/Kpi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,7 +100,7 @@ function Dividas() {
   const detalhesRef = useRef<HTMLInputElement>(null);
   const [importando, setImportando] = useState(false);
   const [importandoDetalhes, setImportandoDetalhes] = useState(false);
-  const { empresas, empresasFiltradas, disponibilidades } = useFluxo();
+  const { empresas, disponibilidades } = useFluxo();
   const posicoes = useQuery({
     queryKey: ["posicoes-dividas"],
     queryFn: async () => {
@@ -372,8 +371,7 @@ function Dividas() {
     }
   };
 
-  const ids = new Set(empresasFiltradas.map((e) => e.id));
-  const todas = (posicoes.data ?? []).filter((p) => !p.empresa_id || ids.has(p.empresa_id));
+  const todas = posicoes.data ?? [];
   const resumoAtual = resumos.data?.at(-1) ?? null;
   const resumoAnterior = resumos.data?.at(-2) ?? null;
   const dataBase = resumoAtual?.data_base ?? todas[0]?.data_base ?? null;
@@ -393,7 +391,6 @@ function Dividas() {
       ? [...detalhesAtuais, ...oficiaisAtuais.filter((p) => !agregadoTemDetalhe(p))]
       : atuais
     : (legados.data ?? [])
-        .filter((c) => !c.empresa_id || ids.has(c.empresa_id))
         .map((c) => ({
           id: c.id,
           data_base: "",
@@ -487,7 +484,6 @@ function Dividas() {
 
   return (
     <div>
-      <FiltrosBar />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold">Dívidas e operações</h1>
