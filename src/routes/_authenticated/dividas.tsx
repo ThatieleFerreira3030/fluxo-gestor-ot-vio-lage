@@ -488,8 +488,7 @@ function Dividas() {
         <div>
           <h1 className="text-lg font-semibold">Dívidas e operações</h1>
           <p className="text-sm text-muted-foreground">
-            Posição mensal consolidada{dataBase ? ` em ${dataBR(dataBase)}` : ""}. Os saldos vêm de
-            “Endividamento - Gráficos” e os dados contratuais de “Amortização de dívidas”.
+            Posição mensal consolidada{dataBase ? ` em ${dataBR(dataBase)}` : ""}.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
