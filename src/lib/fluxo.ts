@@ -21,6 +21,7 @@ export type Movimentacao = {
   demo: boolean;
   editado_manual: boolean;
   cenario_id: string | null;
+  detalhe?: Record<string, unknown> | null;
 };
 
 export type Semana = { indice: number; inicio: Date; fim: Date; rotulo: string; chave: string };
