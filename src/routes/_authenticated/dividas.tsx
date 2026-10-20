@@ -481,6 +481,30 @@ function Dividas() {
     resumoAnterior && Number(resumoAnterior.divida_liquida) !== 0
       ? (liquida / Number(resumoAnterior.divida_liquida) - 1) * 100
       : null;
+  const comparacaoAnual = resumoAnterior
+    ? [
+        {
+          categoria: "Dívida bruta",
+          Anterior: Number(resumoAnterior.divida_bruta),
+          Atual: Number(total),
+        },
+        {
+          categoria: "Bancária",
+          Anterior: Number(resumoAnterior.divida_bancaria),
+          Atual: Number(bancaria),
+        },
+        {
+          categoria: "Tributária",
+          Anterior: Number(resumoAnterior.divida_tributaria),
+          Atual: Number(tributaria),
+        },
+        {
+          categoria: "Dívida líquida",
+          Anterior: Number(resumoAnterior.divida_liquida),
+          Atual: Number(liquida),
+        },
+      ]
+    : [];
 
   return (
     <div>
@@ -634,21 +658,42 @@ function Dividas() {
                 : "Será exibida após a importação de dois períodos."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Dívida líquida anterior</p>
-              <p className="mt-1 font-semibold">
-                {resumoAnterior ? brl(Number(resumoAnterior.divida_liquida), true) : "—"}
-              </p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Dívida líquida anterior</p>
+                <p className="mt-1 font-semibold">
+                  {resumoAnterior ? brl(Number(resumoAnterior.divida_liquida), true) : "—"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Variação</p>
+                <p className="mt-1 font-semibold">
+                  {variacaoLiquida === null
+                    ? "—"
+                    : `${variacaoLiquida >= 0 ? "+" : ""}${variacaoLiquida.toFixed(1)}%`}
+                </p>
+              </div>
             </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Variação</p>
-              <p className="mt-1 font-semibold">
-                {variacaoLiquida === null
-                  ? "—"
-                  : `${variacaoLiquida >= 0 ? "+" : ""}${variacaoLiquida.toFixed(1)}%`}
-              </p>
-            </div>
+            {resumoAnterior && (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={comparacaoAnual}
+                    layout="vertical"
+                    margin={{ top: 8, right: 12, left: 8, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={(v) => brl(Number(v), true)} />
+                    <YAxis type="category" dataKey="categoria" width={92} />
+                    <Tooltip formatter={(v) => brl(Number(v))} />
+                    <Legend />
+                    <Bar dataKey="Anterior" fill="#94a3b8" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="Atual" fill="#1f6b57" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
