@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAssistenteDividasRouteImport } from './routes/_authenticated/assistente-dividas'
 import { Route as AuthenticatedAtualizacaoSemanalRouteImport } from './routes/_authenticated/atualizacao-semanal'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedCenariosRouteImport } from './routes/_authenticated/cenarios'
@@ -41,6 +42,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAssistenteDividasRoute =
+  AuthenticatedAssistenteDividasRouteImport.update({
+    id: '/assistente-dividas',
+    path: '/assistente-dividas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAtualizacaoSemanalRoute =
   AuthenticatedAtualizacaoSemanalRouteImport.update({
     id: '/atualizacao-semanal',
@@ -123,6 +130,7 @@ const AuthenticatedVersoesRoute = AuthenticatedVersoesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/assistente-dividas': typeof AuthenticatedAssistenteDividasRoute
   '/atualizacao-semanal': typeof AuthenticatedAtualizacaoSemanalRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/cenarios': typeof AuthenticatedCenariosRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/assistente-dividas': typeof AuthenticatedAssistenteDividasRoute
   '/atualizacao-semanal': typeof AuthenticatedAtualizacaoSemanalRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/cenarios': typeof AuthenticatedCenariosRoute
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/assistente-dividas': typeof AuthenticatedAssistenteDividasRoute
   '/_authenticated/atualizacao-semanal': typeof AuthenticatedAtualizacaoSemanalRoute
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/cenarios': typeof AuthenticatedCenariosRoute
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/assistente-dividas'
     | '/atualizacao-semanal'
     | '/cadastros'
     | '/cenarios'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/assistente-dividas'
     | '/atualizacao-semanal'
     | '/cadastros'
     | '/cenarios'
@@ -217,6 +229,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/assistente-dividas'
     | '/_authenticated/atualizacao-semanal'
     | '/_authenticated/cadastros'
     | '/_authenticated/cenarios'
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assistente-dividas': {
+      id: '/_authenticated/assistente-dividas'
+      path: '/assistente-dividas'
+      fullPath: '/assistente-dividas'
+      preLoaderRoute: typeof AuthenticatedAssistenteDividasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/atualizacao-semanal': {
@@ -364,6 +384,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistenteDividasRoute: typeof AuthenticatedAssistenteDividasRoute
   AuthenticatedAtualizacaoSemanalRoute: typeof AuthenticatedAtualizacaoSemanalRoute
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedCenariosRoute: typeof AuthenticatedCenariosRoute
@@ -382,6 +403,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistenteDividasRoute: AuthenticatedAssistenteDividasRoute,
   AuthenticatedAtualizacaoSemanalRoute: AuthenticatedAtualizacaoSemanalRoute,
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedCenariosRoute: AuthenticatedCenariosRoute,
