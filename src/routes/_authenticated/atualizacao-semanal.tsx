@@ -67,6 +67,14 @@ const mensagemErro = (erro: unknown) => {
   return typeof erro === "string" && erro.trim() ? erro : "erro sem detalhes retornados pelo banco";
 };
 
+/**
+ * O Supabase atual ainda usa o enum legado. Guardamos Escalado como Pendente
+ * apenas no banco; a situação original da planilha é preservada em "detalhe"
+ * e convertida novamente para Escalado na leitura central dos relatórios.
+ */
+const statusCompativelComBanco = (status: LinhaMovimento["status"]) =>
+  status === "escalado" ? "pendente" : status;
+
 function AtualizacaoSemanal() {
   const { podeEditar, user } = useAuth();
   const qc = useQueryClient();
@@ -347,10 +355,7 @@ function AtualizacaoSemanal() {
           data_vencimento: m.data,
           valor_original: m.valor,
           valor_liquido: m.valor,
-          // Compatibilidade com bancos em que o enum ainda não recebeu
-          // "escalado". A situação original permanece em detalhe e é
-          // restaurada como Escalado na leitura dos relatórios.
-          status: m.status === "escalado" ? "pendente" : m.status,
+          status: statusCompativelComBanco(m.status),
           fonte: m.aba,
           detalhe: m.detalhe,
           chave_origem: m.chave,
