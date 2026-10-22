@@ -347,7 +347,10 @@ function AtualizacaoSemanal() {
           data_vencimento: m.data,
           valor_original: m.valor,
           valor_liquido: m.valor,
-          status: m.status,
+          // Compatibilidade com bancos em que o enum ainda não recebeu
+          // "escalado". A situação original permanece em detalhe e é
+          // restaurada como Escalado na leitura dos relatórios.
+          status: m.status === "escalado" ? "pendente" : m.status,
           fonte: m.aba,
           detalhe: m.detalhe,
           chave_origem: m.chave,
