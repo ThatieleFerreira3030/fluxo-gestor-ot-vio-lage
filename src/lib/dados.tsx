@@ -8,6 +8,29 @@ import { addDias, inicioSemana, iso, toDate } from "./format";
 const ehQuota = (tipo: string) =>
   tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("quota");
 
+const textoNormalizado = (valor: unknown) =>
+  String(valor ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+/**
+ * O banco legado ainda não possui "escalado" no enum de status. Enquanto a
+ * situação original fica preservada no detalhe da planilha, convertemos o
+ * status apenas na leitura para que filtros e relatórios exibam o valor correto.
+ */
+const statusOriginalDaPlanilha = (movimentacao: Movimentacao) => {
+  if (movimentacao.categoria !== "Abate de bovinos" || !movimentacao.detalhe)
+    return movimentacao.status;
+
+  const situacao = Object.entries(movimentacao.detalhe).find(
+    ([chave]) => textoNormalizado(chave) === "situacao",
+  )?.[1];
+
+  return textoNormalizado(situacao).includes("escalado") ? "escalado" : movimentacao.status;
+};
+
 export type Empresa = {
   id: string;
   nome: string;
@@ -189,7 +212,12 @@ export const useMovimentacoes = () => {
         if (error) throw error;
 
         const pagina = (data ?? []) as unknown as Movimentacao[];
-        todas.push(...pagina);
+        todas.push(
+          ...pagina.map((movimentacao) => ({
+            ...movimentacao,
+            status: statusOriginalDaPlanilha(movimentacao),
+          })),
+        );
         if (pagina.length < tamanhoPagina) break;
       }
 
