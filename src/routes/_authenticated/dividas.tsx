@@ -487,7 +487,17 @@ function Dividas() {
 
   const todas = posicoes.data ?? [];
   const resumoAtual = resumos.data?.at(-1) ?? null;
-  const resumoAnterior = resumos.data?.at(-2) ?? null;
+  const resumoMesAnterior = resumos.data?.at(-2) ?? null;
+  const [anoAtual, mesAtual] = (resumoAtual?.data_base ?? "").split("-").map(Number);
+  const resumoAnoAnterior =
+    resumoAtual && anoAtual && mesAtual
+      ? ([...(resumos.data ?? [])]
+          .reverse()
+          .find((resumo) => {
+            const [ano, mes] = resumo.data_base.split("-").map(Number);
+            return ano === anoAtual - 1 && mes === mesAtual;
+          }) ?? null)
+      : null;
   const dataBase = resumoAtual?.data_base ?? todas[0]?.data_base ?? null;
   const atuais = todas.filter((p) => p.data_base === dataBase);
   const atuaisSemFiltro = (posicoes.data ?? []).filter((p) => p.data_base === dataBase);
@@ -673,34 +683,39 @@ function Dividas() {
     const instituicao = item.instituicao ?? item.payload?.instituicao;
     if (instituicao) setInstituicaoSelecionada(instituicao);
   };
-  const variacaoLiquida =
-    resumoAnterior && Number(resumoAnterior.divida_liquida) !== 0
-      ? (liquida / Number(resumoAnterior.divida_liquida) - 1) * 100
+  const variacaoLiquida = (anterior: Resumo | null) =>
+    anterior && Number(anterior.divida_liquida) !== 0
+      ? (liquida / Number(anterior.divida_liquida) - 1) * 100
       : null;
-  const comparacaoAnual = resumoAnterior
-    ? [
-        {
-          categoria: "Dívida bruta",
-          Anterior: Number(resumoAnterior.divida_bruta),
-          Atual: Number(total),
-        },
-        {
-          categoria: "Bancária",
-          Anterior: Number(resumoAnterior.divida_bancaria),
-          Atual: Number(bancaria),
-        },
-        {
-          categoria: "Tributária",
-          Anterior: Number(resumoAnterior.divida_tributaria),
-          Atual: Number(tributaria),
-        },
-        {
-          categoria: "Dívida líquida",
-          Anterior: Number(resumoAnterior.divida_liquida),
-          Atual: Number(liquida),
-        },
-      ]
-    : [];
+  const montarComparacao = (anterior: Resumo | null) =>
+    anterior
+      ? [
+          {
+            categoria: "Dívida bruta",
+            Anterior: Number(anterior.divida_bruta),
+            Atual: Number(total),
+          },
+          {
+            categoria: "Bancária",
+            Anterior: Number(anterior.divida_bancaria),
+            Atual: Number(bancaria),
+          },
+          {
+            categoria: "Tributária",
+            Anterior: Number(anterior.divida_tributaria),
+            Atual: Number(tributaria),
+          },
+          {
+            categoria: "Dívida líquida",
+            Anterior: Number(anterior.divida_liquida),
+            Atual: Number(liquida),
+          },
+        ]
+      : [];
+  const variacaoLiquidaMensal = variacaoLiquida(resumoMesAnterior);
+  const variacaoLiquidaAnual = variacaoLiquida(resumoAnoAnterior);
+  const comparacaoMensal = montarComparacao(resumoMesAnterior);
+  const comparacaoAnual = montarComparacao(resumoAnoAnterior);
   const cascataEndividamento = [
     {
       etapa: "Bancária",
@@ -965,7 +980,7 @@ function Dividas() {
           </div>
         </CardContent>
       </Card>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Perfil da dívida</CardTitle>
@@ -997,33 +1012,80 @@ function Dividas() {
           <CardHeader>
             <CardTitle className="text-base">Comparação anual</CardTitle>
             <CardDescription>
-              {resumoAnterior
-                ? `${dataBR(resumoAnterior.data_base)} comparado a ${dataBR(dataBase)}`
-                : "Será exibida após a importação de dois períodos."}
+              {resumoAnoAnterior
+                ? `${dataBR(resumoAnoAnterior.data_base)} comparado a ${dataBR(dataBase)}`
+                : "Será exibida quando houver posição para o mesmo mês do ano anterior."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">Dívida líquida anterior</p>
+                <p className="text-xs text-muted-foreground">Dívida líquida no ano anterior</p>
                 <p className="mt-1 font-semibold">
-                  {resumoAnterior ? brl(Number(resumoAnterior.divida_liquida), true) : "—"}
+                  {resumoAnoAnterior ? brl(Number(resumoAnoAnterior.divida_liquida), true) : "—"}
                 </p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">Variação</p>
+                <p className="text-xs text-muted-foreground">Variação anual</p>
                 <p className="mt-1 font-semibold">
-                  {variacaoLiquida === null
+                  {variacaoLiquidaAnual === null
                     ? "—"
-                    : `${variacaoLiquida >= 0 ? "+" : ""}${variacaoLiquida.toFixed(1)}%`}
+                    : `${variacaoLiquidaAnual >= 0 ? "+" : ""}${variacaoLiquidaAnual.toFixed(1)}%`}
                 </p>
               </div>
             </div>
-            {resumoAnterior && (
+            {resumoAnoAnterior && (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={comparacaoAnual}
+                    layout="vertical"
+                    margin={{ top: 8, right: 12, left: 8, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={(v) => brl(Number(v), true)} />
+                    <YAxis type="category" dataKey="categoria" width={92} />
+                    <Tooltip formatter={(v) => brl(Number(v))} />
+                    <Legend />
+                    <Bar dataKey="Anterior" fill="#ee7d24" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="Atual" fill="#1f6b57" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Comparação mensal</CardTitle>
+            <CardDescription>
+              {resumoMesAnterior
+                ? `${dataBR(resumoMesAnterior.data_base)} comparado a ${dataBR(dataBase)}`
+                : "Será exibida após a importação de dois períodos consecutivos."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Dívida líquida no mês anterior</p>
+                <p className="mt-1 font-semibold">
+                  {resumoMesAnterior ? brl(Number(resumoMesAnterior.divida_liquida), true) : "—"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Variação mensal</p>
+                <p className="mt-1 font-semibold">
+                  {variacaoLiquidaMensal === null
+                    ? "—"
+                    : `${variacaoLiquidaMensal >= 0 ? "+" : ""}${variacaoLiquidaMensal.toFixed(1)}%`}
+                </p>
+              </div>
+            </div>
+            {resumoMesAnterior && (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={comparacaoMensal}
                     layout="vertical"
                     margin={{ top: 8, right: 12, left: 8, bottom: 8 }}
                   >
