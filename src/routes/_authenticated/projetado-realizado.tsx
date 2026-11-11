@@ -46,6 +46,7 @@ type Disponibilidade = {
 };
 
 type Movimento = {
+  id: string;
   lote_id: string | null;
   natureza: "entrada" | "saida";
   data_prevista: string;
@@ -116,10 +117,13 @@ async function buscarComparacoes(): Promise<Comparacao[]> {
     const { data, error } = await supabase
       .from("movimentacoes")
       .select(
-        "lote_id, natureza, data_prevista, valor_liquido, valor_original, status, categoria, chave_origem",
+        "id, lote_id, natureza, data_prevista, valor_liquido, valor_original, status, categoria, chave_origem",
       )
       .in("lote_id", ids)
       .order("data_prevista")
+      // Vários títulos possuem o mesmo vencimento. O segundo critério torna a
+      // paginação determinística e evita repetir uma versão e omitir outra.
+      .order("id")
       .range(inicio, inicio + 999);
     if (error) throw error;
     const pagina = (data ?? []) as Movimento[];
