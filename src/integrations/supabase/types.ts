@@ -1056,6 +1056,7 @@ export type Database = {
       }
       is_editor: { Args: never; Returns: boolean }
       publicar_lote: { Args: { _lote: string }; Returns: undefined }
+      tem_acesso: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "financeiro" | "diretoria"
