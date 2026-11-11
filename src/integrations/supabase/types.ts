@@ -1056,13 +1056,13 @@ export type Database = {
       }
       is_editor: { Args: never; Returns: boolean }
       publicar_lote: { Args: { _lote: string }; Returns: undefined }
+      tem_acesso: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "financeiro" | "diretoria"
       natureza_mov: "entrada" | "saida"
       status_info:
         | "confirmado"
-        | "escalado"
         | "estimado"
         | "pendente"
         | "realizado"
@@ -1198,7 +1198,6 @@ export const Constants = {
       natureza_mov: ["entrada", "saida"],
       status_info: [
         "confirmado",
-        "escalado",
         "estimado",
         "pendente",
         "realizado",

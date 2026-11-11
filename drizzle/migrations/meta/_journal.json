@@ -15,6 +15,13 @@
       "when": 1791922749168,
       "tag": "0001_endividamento_mensal",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794414011491,
+      "tag": "0002_restrict_rls_to_roles",
+      "breakpoints": true
     }
   ]
 }
