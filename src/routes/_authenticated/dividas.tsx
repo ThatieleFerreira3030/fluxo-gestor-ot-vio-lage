@@ -172,7 +172,7 @@ const evolucaoDividaLiquidaImagem = [
   { nome: "Estoques bovinos", base: 394.7, valor: 34.1, exibido: 34.1, tipo: "aumento" },
   { nome: "Despesas a apropriar - CRA", base: 428.8, valor: 4.3, exibido: 4.3, tipo: "aumento" },
   { nome: "Resultado financeiro", base: 433.1, valor: 64.5, exibido: 64.5, tipo: "aumento" },
-  { nome: "Lançamentos", base: 488.5, valor: 9.1, exibido: -9.1, tipo: "reducao" },
+  { nome: "Loteamentos", base: 488.5, valor: 9.1, exibido: -9.1, tipo: "reducao" },
   { nome: "Dividendos líquidos", base: 488.5, valor: 4.9, exibido: 4.9, tipo: "aumento" },
   { nome: "Investimentos", base: 493.4, valor: 9.9, exibido: 9.9, tipo: "aumento" },
   { nome: "Dívida líq. Out/26", base: 0, valor: 503.2, exibido: 503.2, tipo: "total" },
