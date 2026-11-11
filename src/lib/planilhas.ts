@@ -1200,24 +1200,28 @@ export const lerEndividamentoMensal = async (file: File): Promise<LeituraEndivid
     const quotas = valorNaLinha(resumo[linhaQuotas], data.coluna);
     const disponibilidades = valorNaLinha(resumo[linhaDisponiveis], data.coluna);
     const liquidaPlanilha = valorNaLinha(resumo[linhaLiquida], data.coluna);
-    // A dívida com acionistas foi encerrada e não integra mais esta visão.
-    const bruta = bancaria + tributaria;
-    const liquida = bruta - quotas - disponibilidades;
-    if (Math.abs(brutaPlanilha - bruta) > 1 || Math.abs(liquidaPlanilha - liquida) > 1) {
-      avisos.push(`A dívida com acionistas foi desconsiderada nos totais de ${data.data}.`);
+    const aberturaBruta = bancaria + tributaria;
+    const liquidaCalculada = brutaPlanilha - quotas - disponibilidades;
+    if (
+      Math.abs(brutaPlanilha - aberturaBruta) > 1 ||
+      Math.abs(liquidaPlanilha - liquidaCalculada) > 1
+    ) {
+      avisos.push(
+        `O total consolidado de ${data.data} contém valores além da abertura bancária e tributária; os números oficiais do Resumo Geral foram preservados.`,
+      );
     }
     return {
       dataBase: data.data,
       dividaBancaria: bancaria,
       dividaTributaria: tributaria,
-      dividaBruta: bruta,
+      dividaBruta: brutaPlanilha,
       curtoPrazo:
         data.data === atual.data ? posicoes.reduce((a, p) => a + (p.curtoPrazo ?? 0), 0) : 0,
       longoPrazo:
         data.data === atual.data ? posicoes.reduce((a, p) => a + (p.longoPrazo ?? 0), 0) : 0,
       quotasCapital: quotas,
       disponibilidades,
-      dividaLiquida: liquida,
+      dividaLiquida: liquidaPlanilha,
     };
   };
   const resumos = [resumoNaData(atual), ...(anterior ? [resumoNaData(anterior)] : [])];
