@@ -527,17 +527,34 @@ const lerEntradas = (wb: XLSX.WorkBook, arquivo: string, dataBase: string | null
     erros.push('Aba "Cliente Touro" não encontrada em Entradas.xlsx.');
   } else {
     const linhas = matriz(wb.Sheets[nomeTouro]!);
-    const cab = linhas[0] ?? [];
+    const indiceCabecalho = linhas.slice(0, 30).findIndex((linha) => {
+      const localizar = colunas(linha);
+      return (
+        localizar("DATA VENCIMENTO", "DATA DE VENCIMENTO", "VENCIMENTO") >= 0 &&
+        localizar("VALOR LIQUIDO", "VALOR", "SALDO") >= 0
+      );
+    });
+    const cab = indiceCabecalho >= 0 ? (linhas[indiceCabecalho] ?? []) : [];
     const col = colunas(cab);
-    const iVenc = col("DATA VENCIMENTO");
-    const iDoc = col("NUMERO DOCUMENTO");
-    const iNome = col("NOME FORNECEDOR");
-    const iCpf = col("CNPJ_CPF");
-    const iValor = col("VALOR LIQUIDO");
+    // O relatório do RM mantém a ordem A:F, mas o texto dos cabeçalhos varia
+    // entre exportações. As posições funcionam como segurança quando o arquivo
+    // chega sem cabeçalho ou com um título não reconhecido.
+    const iEmissao = col("DATA EMISSAO", "DATA DE EMISSAO", "EMISSAO");
+    const iVencLocalizado = col("DATA VENCIMENTO", "DATA DE VENCIMENTO", "VENCIMENTO");
+    const iDocLocalizado = col("NUMERO DOCUMENTO", "NÚMERO DOCUMENTO", "DOCUMENTO");
+    const iNomeLocalizado = col("NOME FORNECEDOR", "NOME CLIENTE", "CLIENTE", "NOME");
+    const iCpfLocalizado = col("CNPJ_CPF", "CNPJ CPF", "CPF/CNPJ", "CNPJ/CPF", "CPF");
+    const iValorLocalizado = col("VALOR LIQUIDO", "VALOR LÍQUIDO", "VALOR", "SALDO");
+    const iVenc = iVencLocalizado >= 0 ? iVencLocalizado : 1;
+    const iDoc = iDocLocalizado >= 0 ? iDocLocalizado : 2;
+    const iNome = iNomeLocalizado >= 0 ? iNomeLocalizado : 3;
+    const iCpf = iCpfLocalizado >= 0 ? iCpfLocalizado : 4;
+    const iValor = iValorLocalizado >= 0 ? iValorLocalizado : 5;
+    const inicioDados = indiceCabecalho >= 0 ? indiceCabecalho + 1 : 0;
     let ign = 0;
     const vistos = new Set<string>();
     const lista: LinhaMovimento[] = [];
-    for (const r of linhas.slice(1)) {
+    for (const r of linhas.slice(inicioDados)) {
       if (linhaVazia(r)) continue;
       const data = dataCelula(r[iVenc]);
       const valor = numero(r[iValor]);
@@ -566,7 +583,7 @@ const lerEntradas = (wb: XLSX.WorkBook, arquivo: string, dataBase: string | null
         status: "confirmado",
         detalhe: {
           aba: nomeTouro,
-          "DATA EMISSAO": dataCelula(r[col("DATA EMISSAO")]),
+          "DATA EMISSAO": dataCelula(r[iEmissao >= 0 ? iEmissao : 0]),
           "DATA VENCIMENTO": data,
           "NUMERO DOCUMENTO": txt(r[iDoc]),
           "NOME FORNECEDOR": txt(r[iNome]),
