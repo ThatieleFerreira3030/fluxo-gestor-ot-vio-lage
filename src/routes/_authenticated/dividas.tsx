@@ -6,6 +6,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  LabelList,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -160,6 +162,107 @@ const chaveInstituicaoPagamento = (valor: string) => {
     return `ecoagro-cra-${emissaoCra}`;
   return chaveCredor(valor);
 };
+
+const evolucaoDividaLiquidaImagem = [
+  { nome: "Dívida líq. Out/25", base: 0, valor: 455.8, exibido: 455.8, tipo: "total" },
+  { nome: "Fluxo de caixa op.", base: 383.8, valor: 72, exibido: -72, tipo: "reducao" },
+  { nome: "Remuneração de avais", base: 383.8, valor: 0, exibido: 0, tipo: "neutro" },
+  { nome: "Giro", base: 383.8, valor: 22.7, exibido: 22.7, tipo: "aumento" },
+  { nome: "Impostos a recolher", base: 394.7, valor: 11.8, exibido: -11.8, tipo: "reducao" },
+  { nome: "Estoques bovinos", base: 394.7, valor: 34.1, exibido: 34.1, tipo: "aumento" },
+  { nome: "Despesas a apropriar - CRA", base: 428.8, valor: 4.3, exibido: 4.3, tipo: "aumento" },
+  { nome: "Resultado financeiro", base: 433.1, valor: 64.5, exibido: 64.5, tipo: "aumento" },
+  { nome: "Lançamentos", base: 488.5, valor: 9.1, exibido: -9.1, tipo: "reducao" },
+  { nome: "Dividendos líquidos", base: 488.5, valor: 4.9, exibido: 4.9, tipo: "aumento" },
+  { nome: "Investimentos", base: 493.4, valor: 9.9, exibido: 9.9, tipo: "aumento" },
+  { nome: "Dívida líq. Out/26", base: 0, valor: 503.2, exibido: 503.2, tipo: "total" },
+] as const;
+
+const corEvolucaoImagem = (tipo: (typeof evolucaoDividaLiquidaImagem)[number]["tipo"]) => {
+  if (tipo === "total") return "#2f7566";
+  if (tipo === "reducao") return "#f4b183";
+  if (tipo === "neutro") return "#d6a500";
+  return "#f47b20";
+};
+
+function GraficoEvolucaoDividaImagem() {
+  return (
+    <Card className="mt-6 overflow-hidden">
+      <CardHeader>
+        <CardTitle className="text-base text-[#123f2d]">
+          Evolução da dívida líquida — Out/25 a Out/26
+        </CardTitle>
+        <CardDescription>Reconstrução dos valores apresentados no relatório de endividamento.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="h-[430px] min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={evolucaoDividaLiquidaImagem} margin={{ top: 32, right: 12, left: 0, bottom: 112 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e6ded2" />
+              <XAxis
+                dataKey="nome"
+                interval={0}
+                height={105}
+                angle={-38}
+                textAnchor="end"
+                tick={{ fontSize: 10, fill: "#5f625f" }}
+              />
+              <YAxis
+                domain={[0, 560]}
+                tick={{ fontSize: 10 }}
+                tickFormatter={(v) => `R$ ${Number(v).toLocaleString("pt-BR")} mi`}
+                width={76}
+              />
+              <Tooltip
+                cursor={{ fill: "rgba(18, 63, 45, 0.05)" }}
+                formatter={(_valor, _nome, item) => {
+                  const exibido = Number(item.payload.exibido);
+                  const sinal = exibido > 0 && item.payload.tipo !== "total" ? "+" : "";
+                  return [
+                    `${sinal}${exibido.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi`,
+                    "Variação",
+                  ];
+                }}
+                labelFormatter={(label) => String(label)}
+              />
+              <Bar dataKey="base" stackId="evolucao-imagem" fill="transparent" isAnimationActive={false} />
+              <Bar dataKey="valor" stackId="evolucao-imagem" radius={[3, 3, 0, 0]}>
+                {evolucaoDividaLiquidaImagem.map((item) => (
+                  <Cell key={item.nome} fill={corEvolucaoImagem(item.tipo)} />
+                ))}
+                <LabelList
+                  dataKey="exibido"
+                  position="top"
+                  formatter={(valor: number) =>
+                    valor === 0
+                      ? "—"
+                      : `${valor > 0 && valor < 100 ? "+" : ""}${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}`
+                  }
+                  style={{ fontSize: 10, fontWeight: 600, fill: "#26352f" }}
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex flex-col justify-between rounded-lg bg-[#0d4429] p-5 text-white">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d6a500]">Variação do período</p>
+            <p className="mt-7 text-5xl font-semibold">+10%</p>
+            <p className="mt-4 text-xl italic text-[#d6a500]">R$ 47,3 mi</p>
+          </div>
+          <div className="mt-8 border-t border-[#d6a500]/60 pt-5">
+            <p className="mb-2 text-xs font-medium">Principais direcionadores:</p>
+            <ul className="space-y-1 text-xs text-white/90">
+              <li>• Resultado financeiro</li>
+              <li>• Estoques bovinos</li>
+              <li>• Giro</li>
+            </ul>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function Dividas() {
   const { podeEditar } = useAuth();
@@ -980,6 +1083,7 @@ function Dividas() {
           </div>
         </CardContent>
       </Card>
+      <GraficoEvolucaoDividaImagem />
       <div className="mt-6 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <Card>
           <CardHeader>
