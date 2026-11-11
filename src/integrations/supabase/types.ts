@@ -1062,7 +1062,6 @@ export type Database = {
       natureza_mov: "entrada" | "saida"
       status_info:
         | "confirmado"
-        | "escalado"
         | "estimado"
         | "pendente"
         | "realizado"
@@ -1198,7 +1197,6 @@ export const Constants = {
       natureza_mov: ["entrada", "saida"],
       status_info: [
         "confirmado",
-        "escalado",
         "estimado",
         "pendente",
         "realizado",
