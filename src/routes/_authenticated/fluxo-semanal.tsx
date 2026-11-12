@@ -246,7 +246,7 @@ function FluxoSemanal() {
                 </Fragment>
               ))}
               <Totais
-                rotulo="Geração líquida da semana"
+                rotulo="Movimentação líquida da semana"
                 valores={fluxo.resultados.map((r) => r.liquido)}
                 total={fluxo.totalEntradas - fluxo.totalSaidas}
                 separador="totais"

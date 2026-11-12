@@ -210,7 +210,7 @@ function VisaoExecutiva() {
         />
         <Kpi titulo="Amortizações" valor={brl(fluxo.totalAmortizacoes, true)} tom="negativo" />
         <Kpi
-          titulo="Geração líquida de caixa"
+          titulo="Movimentação líquida de caixa"
           valor={brl(fluxo.totalEntradas - fluxo.totalSaidas, true)}
           tom={fluxo.totalEntradas - fluxo.totalSaidas >= 0 ? "positivo" : "negativo"}
         />

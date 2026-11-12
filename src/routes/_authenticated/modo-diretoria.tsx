@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/modo-diretoria")({
       { title: "Modo Diretoria | Grupo Otávio Lage" },
       {
         name: "description",
-        content: "Leitura executiva simplificada do caixa: saldo, geração e alertas do período.",
+        content: "Leitura executiva simplificada do caixa: saldo, movimentação e alertas do período.",
       },
       { property: "og:title", content: "Modo Diretoria | Grupo Otávio Lage" },
       { property: "og:description", content: "Resumo estratégico do fluxo de caixa semanal." },
@@ -39,28 +39,28 @@ function ModoDiretoria() {
     return {
       semana: s.rotulo,
       Saldo: Math.round(r?.saldoFinal ?? 0),
-      Geração: Math.round(r?.liquido ?? 0),
+      Movimentação: Math.round(r?.liquido ?? 0),
     };
   });
 
   const menorSaldo = fluxo.menorSaldo;
   const semanasNegativas = fluxo.resultados.filter((r) => r.saldoFinal < 0).length;
-  const geracao = fluxo.totalEntradas - fluxo.totalSaidas;
+  const movimentacao = fluxo.totalEntradas - fluxo.totalSaidas;
 
   return (
     <div>
       <FiltrosBar />
       <h1 className="text-lg font-semibold">Modo Diretoria</h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        Visão simplificada para decisão: caixa disponível, geração do período e pontos de atenção.
+        Visão simplificada para decisão: caixa disponível, movimentação do período e pontos de atenção.
       </p>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Kpi titulo="Saldo inicial" valor={brl(fluxo.saldoInicial, true)} />
         <Kpi
-          titulo="Geração de caixa"
-          valor={brl(geracao, true)}
-          tom={geracao >= 0 ? "positivo" : "negativo"}
+          titulo="Movimentação de caixa"
+          valor={brl(movimentacao, true)}
+          tom={movimentacao >= 0 ? "positivo" : "negativo"}
         />
         <Kpi
           titulo="Menor saldo projetado"
