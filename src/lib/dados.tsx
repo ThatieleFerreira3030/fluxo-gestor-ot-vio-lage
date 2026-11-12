@@ -3,18 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularFluxo, montarSemanas, type Cenario, type Movimentacao } from "./fluxo";
 import { addDias, inicioSemana, iso, toDate } from "./format";
+import { chaveEmpresa } from "./empresas";
 
 /** Quotas não compõem o saldo inicial do fluxo. */
 const ehQuota = (tipo: string) =>
   tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("quota");
-
-const normalizarNomeEmpresa = (nome: string) =>
-  nome
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
 
 const EMPRESAS_PADRAO = new Set(
   [
@@ -24,7 +17,7 @@ const EMPRESAS_PADRAO = new Set(
     "Palmeiras Empreendimentos Imobiliários",
     "Planagri",
     "Vera Cruz Agropecuária",
-  ].map(normalizarNomeEmpresa),
+  ].map(chaveEmpresa),
 );
 
 const textoNormalizado = (valor: unknown) =>
@@ -178,7 +171,7 @@ export function FiltrosProvider({ children }: { children: ReactNode }) {
       .filter((empresa) =>
         [empresa.nome, empresa.apelido]
           .filter((nome): nome is string => Boolean(nome))
-          .some((nome) => EMPRESAS_PADRAO.has(normalizarNomeEmpresa(nome))),
+          .some((nome) => EMPRESAS_PADRAO.has(chaveEmpresa(nome))),
       )
       .map((empresa) => empresa.id);
 

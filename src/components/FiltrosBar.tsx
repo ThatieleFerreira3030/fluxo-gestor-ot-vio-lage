@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -94,15 +93,10 @@ function FiltroEmpresas() {
 
 export function FiltrosBar() {
   const { filtros, setFiltros } = useFiltros();
-  const { data: empresas } = useEmpresas();
   const { data: cenarios } = useCenarios();
   const semanas = montarSemanas(filtros.dataBase, filtros.horizonte);
   const primeiraSemana = semanas[0];
   const fim = semanas.at(-1)?.fim;
-  const empresasAgrupadas = agruparEmpresas(empresas ?? []);
-  const empresasSelecionadas = empresasAgrupadas.filter((empresa) =>
-    empresa.ids.some((id) => filtros.empresaIds.includes(id)),
-  );
 
   return (
     <Card className="no-print mb-6 gap-0 p-4 shadow-panel">
@@ -157,24 +151,6 @@ export function FiltrosBar() {
           </Select>
         </div>
       </div>
-      {empresasSelecionadas.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {empresasSelecionadas.map((e) => (
-            <Badge
-              key={e.chave}
-              variant="secondary"
-              className="cursor-pointer gap-1"
-              onClick={() =>
-                setFiltros({
-                  empresaIds: filtros.empresaIds.filter((id) => !e.ids.includes(id)),
-                })
-              }
-            >
-              {e.nome} ×
-            </Badge>
-          ))}
-        </div>
-      )}
       <div className="mt-3 space-y-1 text-xs text-muted-foreground">
         <p>
           Fechamento da data-base: {dataBR(inicioSemana(filtros.dataBase))} a{" "}
