@@ -175,12 +175,22 @@ export function FiltrosBar() {
           ))}
         </div>
       )}
-      <p className="mt-3 text-xs text-muted-foreground">
-        Fechamento da data-base: {dataBR(inicioSemana(filtros.dataBase))} a{" "}
-        {dataBR(filtros.dataBase)}
-        {" · "}primeira projeção: {dataBR(primeiraSemana?.inicio)} a {dataBR(primeiraSemana?.fim)}
-        {" · "}depois, semanas de sexta a quinta até {dataBR(fim)}
-      </p>
+      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+        <p>
+          Fechamento da data-base: {dataBR(inicioSemana(filtros.dataBase))} a{" "}
+          {dataBR(filtros.dataBase)}.
+        </p>
+        <p>
+          Horizonte selecionado: {filtros.horizonte} semanas, de{" "}
+          {dataBR(primeiraSemana?.inicio)} até {dataBR(fim)}. A primeira projeção compreende{" "}
+          {dataBR(primeiraSemana?.inicio)} a {dataBR(primeiraSemana?.fim)}; depois, são consideradas
+          semanas de sexta a quinta.
+        </p>
+        <p>
+          Alcance das bases: fluxo de pagamentos e recebimentos com previsões até 31/03/2027 ·
+          endividamento projetado até o vencimento final de cada contrato.
+        </p>
+      </div>
     </Card>
   );
 }
