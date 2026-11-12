@@ -8,6 +8,25 @@ import { addDias, inicioSemana, iso, toDate } from "./format";
 const ehQuota = (tipo: string) =>
   tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("quota");
 
+const normalizarNomeEmpresa = (nome: string) =>
+  nome
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const EMPRESAS_PADRAO = new Set(
+  [
+    "OL Látex Tocantins",
+    "Goiás Carne/Cooperboi",
+    "OL Látex",
+    "Palmeiras Empreendimentos Imobiliários",
+    "Planagri",
+    "Vera Cruz Agropecuária",
+  ].map(normalizarNomeEmpresa),
+);
+
 const textoNormalizado = (valor: unknown) =>
   String(valor ?? "")
     .normalize("NFD")
@@ -142,13 +161,30 @@ export function FiltrosProvider({ children }: { children: ReactNode }) {
     status: "todos",
   });
   const lote = useLoteAtivo();
+  const empresas = useEmpresas();
   const dataBaseLote = lote.data?.data_base ?? null;
   const [dataBaseManual, setDataBaseManual] = useState(false);
+  const [empresasPadraoInicializadas, setEmpresasPadraoInicializadas] = useState(false);
 
   useEffect(() => {
     if (!dataBaseLote || dataBaseManual) return;
     setF((a) => (a.dataBase === dataBaseLote ? a : { ...a, dataBase: dataBaseLote }));
   }, [dataBaseLote, dataBaseManual]);
+
+  useEffect(() => {
+    if (empresasPadraoInicializadas || !empresas.data) return;
+
+    const empresaIds = empresas.data
+      .filter((empresa) =>
+        [empresa.nome, empresa.apelido]
+          .filter((nome): nome is string => Boolean(nome))
+          .some((nome) => EMPRESAS_PADRAO.has(normalizarNomeEmpresa(nome))),
+      )
+      .map((empresa) => empresa.id);
+
+    setF((atuais) => ({ ...atuais, empresaIds }));
+    setEmpresasPadraoInicializadas(true);
+  }, [empresas.data, empresasPadraoInicializadas]);
 
   const valor = useMemo(
     () => ({
